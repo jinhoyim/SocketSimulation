@@ -12,9 +12,12 @@ namespace SocketServerApp
         private readonly CancellationTokenSource _cts;
 
         private bool _isStarted = false;
-        private readonly int startMinConnections = 5;
+        private readonly int _startMinConnections = 5;
+        
         private readonly Lock _lock = new Lock();
-        private readonly ConcurrentDictionary<string, Socket> _clients = new();
+        private readonly ConcurrentDictionary<string, SocketCommunicator> _clients = new();
+
+        private int _increment;
 
         public SocketServer(IPAddress ipAddress, int port, CancellationTokenSource cts)
         {
@@ -84,11 +87,19 @@ namespace SocketServerApp
             string clientId = string.Empty;
             try
             {
-                var connectionAcceptor = new ConnectionAcceptor(client, _clients);
+                var connectionAcceptor = new ConnectionAcceptor(client, _clients.Keys);
                 (var accepted, clientId) = await connectionAcceptor.AcceptAsync(cancellationToken);
                 if (accepted)
                 {
-                    await ReceiveAsync(client, clientId, cancellationToken);
+                    var communicator = new SocketCommunicator(client);
+                    _clients[clientId] = communicator;
+                    if (CanInitAndFirstSend())
+                    {
+                        var initialData = CreateInitialDataRecord();
+                        await FirstSendAsync(initialData, cancellationToken);
+                    }
+
+                    await communicator.ReceiveAsync(cancellationToken);
                 }
             }
             catch (SocketException se)
@@ -115,20 +126,33 @@ namespace SocketServerApp
             }
         }
 
-        private async Task ReceiveAsync(Socket client, string clientId, CancellationToken cancellationToken)
+        private DataRecord CreateInitialDataRecord()
         {
-            _clients[clientId] = client;
-                        
-            bool isStarted;
+            var initValue = 1;
+            var lockTime = LockTime.From(DateTime.Now.AddSeconds(2));
+            string id;
+            
             lock (_lock)
             {
-                isStarted = _isStarted;
+                _increment++;
+                id = _increment.ToString();
             }
+            return new DataRecord(id, lockTime, string.Empty, initValue);
+        }
+        
+        private async Task FirstSendAsync(DataRecord record, CancellationToken cancellationToken)
+        {
+            var tasks = _clients.Values.Select(client =>
+                    client.SendRecordAsync(record, cancellationToken));
+            await Task.WhenAll(tasks);
+        }
 
-            if (!isStarted && _clients.Count >= startMinConnections)
+        private bool CanInitAndFirstSend()
+        {
+            lock (_lock)
             {
-                
-            }
+                return !_isStarted && _clients.Count >= _startMinConnections;
+            } 
         }
     }
 }

@@ -5,7 +5,7 @@ using static SocketCommunicationLib.ProtocolConstants;
 
 namespace SocketServerApp;
 
-public class ConnectionAcceptor(Socket client, ConcurrentDictionary<string, Socket> clients)
+public class ConnectionAcceptor(Socket client, ICollection<string> clients)
 {
     public async Task<(bool accepted, string clientId)> AcceptAsync(CancellationToken cancellationToken)
     {
@@ -40,7 +40,7 @@ public class ConnectionAcceptor(Socket client, ConcurrentDictionary<string, Sock
         {
             responseMessage = $"{Error}Required connect with ClientId.{Eom}";
         }
-        else if (clients.ContainsKey(clientId))
+        else if (clients.Contains(clientId))
         {
             responseMessage = $"{Error}ClientId already connected.{Eom}";
         }

@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace SocketClientApp;
 
@@ -41,7 +42,11 @@ public class SocketClient
 
             if (connected)
             {
-                
+                var buffer = new byte[1024];
+                var receivedDataLength = await server.ReceiveAsync(buffer, SocketFlags.None, cancellationToken);
+                var receivedData = Encoding.UTF8.GetString(buffer, 0, receivedDataLength);
+                Console.WriteLine(receivedData);
+                Console.WriteLine("End handle.");
             }
             else
             {
