@@ -1,10 +1,11 @@
 ﻿using System.Net;
+using SocketClientApp;
 
-string clientId = "A1";
-string serverIpAddress = "127.0.0.1";
-int serverPort = 12345;
+var clientId = "A1";
+var serverIpAddress = "127.0.0.1";
+var serverPort = 12345;
 
-using var cts = new CancellationTokenSource();
+var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, _) =>
 {
     cts.Cancel();
@@ -18,6 +19,12 @@ if (!IPAddress.TryParse(serverIpAddress, out var ipAddress))
 }
 
 var client = SocketClient.Create(clientId, ipAddress, serverPort, cts);
-await client.StartAsync();
-
-Console.WriteLine("App Stopped.");
+try
+{
+    await client.StartAsync();
+    Console.WriteLine("App Stopped.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Application Error: {ex}");
+}
