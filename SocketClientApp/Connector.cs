@@ -1,14 +1,11 @@
 using System.Net.Sockets;
 using System.Text;
+using static SocketCommunicationLib.ProtocolConstants;
 
 namespace SocketClientApp;
 
 public class Connector(Socket server, string clientId)
 {
-    private const string Eom = "<|EOM|>";
-    private const string Connect = "<|CONNECT|>";
-    private const string Success = "<|SUCCESS|>";
-    private const string Error = "<|ERROR|>";
     private const string ErrorMessageServerCannotConnect = "Server cannot connect.";
     
     public async Task<(bool connected, string errorMessage)> ConnectAsync(CancellationToken cancellationToken)

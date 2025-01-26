@@ -1,16 +1,12 @@
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
+using static SocketCommunicationLib.ProtocolConstants;
 
 namespace SocketServerApp;
 
 public class ConnectionAcceptor(Socket client, ConcurrentDictionary<string, Socket> clients)
 {
-    private const string Eom = "<|EOM|>";
-    private const string Connect = "<|CONNECT|>";
-    private const string Success = "<|SUCCESS|>";
-    private const string Error = "<|ERROR|>";
-    
     public async Task<(bool accepted, string clientId)> AcceptAsync(CancellationToken cancellationToken)
     {
         var receiveRequest = await ReceiveRequestAsync(cancellationToken);
