@@ -1,7 +1,14 @@
 ﻿using System.Net;
 using SocketClientApp;
 
-var clientId = "A1";
+if (args.Length == 0)
+{
+    Console.WriteLine("Please run with clientId");
+    Console.WriteLine("dotnet run <app> <client id>");
+    return;
+}
+
+var clientId = args[0];
 var serverIpAddress = "127.0.0.1";
 var serverPort = 12345;
 
