@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SocketServerApp
 {
-    internal class SocketServer
+    public class SocketServer
     {
         private const int LingerTimeSeconds = 10;
         private readonly IPEndPoint _ipEndPoint;
@@ -13,7 +13,7 @@ namespace SocketServerApp
 
         private bool _isStarted = false;
         private readonly Lock _lock = new Lock();
-        private readonly ConcurrentDictionary<string, Socket> clients = new();
+        private readonly ConcurrentDictionary<string, Socket> _clients = new();
 
         public SocketServer(IPAddress ipAddress, int port, CancellationTokenSource cts)
         {
@@ -28,8 +28,9 @@ namespace SocketServerApp
 
         internal async Task StartAsync()
         {
-            CancellationToken cancellationToken = _cts.Token;
-            using Socket listener = new Socket(
+            var cancellationToken = _cts.Token;
+            
+            using var listener = new Socket(
                         _ipEndPoint.AddressFamily,
                         SocketType.Stream,
                         ProtocolType.Tcp);
@@ -41,60 +42,23 @@ namespace SocketServerApp
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    Socket client = await listener.AcceptAsync(cancellationToken);
+                    var client = await listener.AcceptAsync(cancellationToken);
                     client.LingerState = new LingerOption(true, LingerTimeSeconds);
 
                     _ = Task.Run(async () =>
                     {
-
+                        string clientId = string.Empty;
+                        var connectionAcceptor = new ConnectionAcceptor(client, _clients);
+                        bool accepted = false;
+                        
                         try
                         {
-                            StringBuilder sb = new StringBuilder();
-
-                            var buffer = new byte[1024];
-
-                            int receivedBytes = await client.ReceiveAsync(buffer, cancellationToken);
-                            var request = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                            const string Eom = "<|EOM|>";
-                            const string Connect = "<|CONNECT|>";
-                            const string Success = "<|SUCCESS|>";
-                            const string Error = "<|ERROR|>";
-
-                            string responseMessage;
-                            bool connectionResult = false;
-
-                            if (request.StartsWith(Connect))
-                            {
-                                int eomPosition = request.IndexOf(Eom, 0);
-                                string clientId = request[Connect.Length..eomPosition];
-
-                                if (string.IsNullOrEmpty(clientId))
-                                {
-                                    responseMessage = $"{Error}Invalid ClientId.{Eom}";
-                                }
-                                else if (clients.ContainsKey(clientId))
-                                {
-                                    responseMessage = $"{Error}ClientId already connected.{Eom}";
-                                }
-                                else
-                                {
-                                    connectionResult = true;
-                                    clients.AddOrUpdate(clientId, client, (_, _) => client);
-                                    responseMessage = $"{Success}Connection successful.{Eom}";
-                                }
-                            }
-                            else
-                            {
-                                responseMessage = $"{Error}Required connect with ClientId.{Eom}";
-                            }
-
-                            var messageBytes = GetMessageBytes(responseMessage);
-                            await client.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
-
-                            if (!connectionResult)
+                            (accepted, clientId) = await connectionAcceptor.AcceptAsync(cancellationToken);    
+                            if (!accepted)
                             {
                                 return;
                             }
+                            _clients[clientId] = client;
                         }
                         catch (SocketException se)
                         {
@@ -112,9 +76,10 @@ namespace SocketServerApp
                             }
                             client.Dispose();
 
-                            if (clients.Count == 0)
+                            _clients.TryRemove(clientId, out _);
+                            if (_clients.IsEmpty)
                             {
-                                _cts.Cancel();
+                                await _cts.CancelAsync();
                             }
                         }
                         Console.WriteLine("Client Socket closed.");
@@ -139,11 +104,6 @@ namespace SocketServerApp
                 }
             }
             Console.WriteLine("Listener socket closed.");
-        }
-
-        private static byte[] GetMessageBytes(string ackMessage)
-        {
-            return Encoding.UTF8.GetBytes(ackMessage);
         }
     }
 }

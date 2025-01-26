@@ -19,6 +19,12 @@ if (!IPAddress.TryParse(serverIpAddress, out var ipAddress))
 }
 
 var server = SocketServer.Create(ipAddress, serverPort, cts);
-await server.StartAsync();
-
-Console.WriteLine("App Stopped.");
+try
+{
+    await server.StartAsync();
+    Console.WriteLine("App Stopped.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Application Error: {ex}");
+}
