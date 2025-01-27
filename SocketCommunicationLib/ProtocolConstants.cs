@@ -7,4 +7,5 @@ public static class ProtocolConstants
     public const string LockTime = "<|LOCKTIME|>";
     public const string Success = "<|SUCCESS|>";
     public const string Error = "<|ERROR|>";
+    public const string ReadyConnect = "<|READYCONNECT|>";
 }

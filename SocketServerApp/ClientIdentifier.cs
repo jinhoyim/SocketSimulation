@@ -22,6 +22,7 @@ public class ClientIdentifier
     
     public async Task IdentifyClientAsync(CancellationToken cancellationToken)
     {
+        await SendReadyConnectAsync(cancellationToken);
         var receiveRequest = await ReceiveRequestAsync(cancellationToken);
         var tmpClientId = ExtractClientId(receiveRequest);
         _verifyStatus = Verify(tmpClientId);
@@ -30,6 +31,13 @@ public class ClientIdentifier
             ClientId = tmpClientId;
         }
         await SendIdentifyResultAsync(cancellationToken);
+    }
+
+    private async Task SendReadyConnectAsync(CancellationToken cancellationToken)
+    {
+        var message = $"{ReadyConnect}{Eom}";
+        var messageBytes = Encoding.UTF8.GetBytes(message);
+        await _client.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
     }
 
     private async Task<string> ReceiveRequestAsync(CancellationToken cancellationToken)

@@ -10,6 +10,12 @@ public class Connector(Socket server, string clientId)
     
     public async Task<(bool connected, string errorMessage)> ConnectAsync(CancellationToken cancellationToken)
     {
+        var isReady = await WaitReadyConnectAsync(cancellationToken);
+        if (!isReady)
+        {
+            return (false, "Server is not ready.");
+        }
+
         await RequestConnectAsync(cancellationToken);
         var received = await ReceiveResultAsync(cancellationToken);
 
@@ -24,6 +30,22 @@ public class Connector(Socket server, string clientId)
         return connected ?
             (connected, string.Empty) :
             (connected, received[Error.Length..eomPosition]);
+    }
+
+    private async Task<bool> WaitReadyConnectAsync(CancellationToken cancellationToken)
+    {
+        var buffer = new byte[1024];
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var receivedDataLength = await server.ReceiveAsync(buffer, SocketFlags.None, cancellationToken);
+            var receivedData = GetResponse(buffer, receivedDataLength);
+
+            if (receivedData.StartsWith(receivedData))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private async Task<string> ReceiveResultAsync(CancellationToken cancellationToken)
