@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketClientApp", "SocketCl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketCommunicationLib", "SocketCommunicationLib\SocketCommunicationLib.csproj", "{7C7BB887-319A-44CC-9A3F-94AF4BFBF3C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketCommunicationLib.Tests", "SocketCommunicationLib.Tests\SocketCommunicationLib.Tests.csproj", "{D370641E-3D2F-4516-8F8D-0FB318170575}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{7C7BB887-319A-44CC-9A3F-94AF4BFBF3C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C7BB887-319A-44CC-9A3F-94AF4BFBF3C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C7BB887-319A-44CC-9A3F-94AF4BFBF3C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D370641E-3D2F-4516-8F8D-0FB318170575}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D370641E-3D2F-4516-8F8D-0FB318170575}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D370641E-3D2F-4516-8F8D-0FB318170575}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D370641E-3D2F-4516-8F8D-0FB318170575}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security;
 using System.Text;
+using System.Threading.Channels;
+using SocketCommunicationLib;
 
 namespace SocketServerApp
 {
@@ -18,6 +20,8 @@ namespace SocketServerApp
         
         private readonly Lock _lock = new Lock();
         private readonly ConcurrentDictionary<string, SocketCommunicator> _clients = new();
+        private DataRecordStore _dataRecordStore = new();
+        private SocketsCommunicator _socketsCommunicator;
 
         private int _increment;
 
@@ -25,6 +29,7 @@ namespace SocketServerApp
         {
             _ipEndPoint = new IPEndPoint(ipAddress, port);
             _cts = cts;
+            _socketsCommunicator = new(_clients);
         }
 
         internal static SocketServer Create(IPAddress ipAddress, int port, CancellationTokenSource cts)
@@ -63,7 +68,7 @@ namespace SocketServerApp
                 var identifier = new ClientIdentifier(client, _clients.Keys);
                 await identifier.IdentifyClientAsync(cancellationToken);
                 clientId = identifier.ClientId;
-                
+
                 if (!identifier.IsVerified || string.IsNullOrEmpty(clientId))
                 {
                     return;
@@ -71,14 +76,35 @@ namespace SocketServerApp
 
                 var communicator = new SocketCommunicator(client);
                 _clients[clientId] = communicator;
-                
+
                 if (CanInitAndFirstSend())
                 {
                     var initialData = CreateInitialDataRecord();
+                    await _dataRecordStore.SaveAsync();
                     await FirstSendAsync(initialData, cancellationToken);
                 }
 
-                await communicator.ReceiveAsync(cancellationToken);
+                var jobChannel = new ServerJobChannel<string>();
+
+                var processor = new ServerJobProcessor(jobChannel, _cts, _dataRecordStore, _socketsCommunicator);
+
+                var messageListener = new MessageListener(
+                    client,
+                    new MessageStringExtractor(
+                        ProtocolConstants.Eom,
+                        Encoding.UTF8),
+                    jobChannel);
+
+                // _ = Task.Run(async () => { await processor.ProcessAsync(cancellationToken); }, cancellationToken);
+                // await messageListener.ListenAsync(cancellationToken);
+                
+                var processTask = processor.ProcessAsync(cancellationToken);
+                var listenTask = messageListener.ListenAsync(cancellationToken);
+                await Task.WhenAll(listenTask, processTask);
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"Operation cancelled. ClientId: {clientId} socket closed.");
             }
             catch (SocketException se)
             {

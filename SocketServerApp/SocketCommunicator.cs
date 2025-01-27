@@ -22,19 +22,9 @@ public class SocketCommunicator
         await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
     }
 
-    public async Task<string> ReceiveAsync(CancellationToken cancellationToken)
+    public async Task SendStringAsync(string message, CancellationToken cancellationToken)
     {
-        var buffer = new byte[1024];
-        var receivedDataLength = await _socket.ReceiveAsync(buffer, SocketFlags.None, cancellationToken);
-        var receivedData = Encoding.UTF8.GetString(buffer, 0, receivedDataLength);
-        
-        if (receivedData.EndsWith(ProtocolConstants.Eom))
-        {
-            var action = "<|QUERY|>";
-            var eomPosition = receivedData.IndexOf(ProtocolConstants.Eom, 0, StringComparison.Ordinal);
-            return receivedData[action.Length..eomPosition];
-        }
-
-        return string.Empty;
+        var messageBytes = Encoding.UTF8.GetBytes(message);
+        await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
     }
 }

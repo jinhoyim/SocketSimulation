@@ -8,4 +8,5 @@ public static class ProtocolConstants
     public const string Success = "<|SUCCESS|>";
     public const string Error = "<|ERROR|>";
     public const string ReadyConnect = "<|READYCONNECT|>";
+    public const string ServerTerminated = "<|SERVERTERMINATED|>";
 }
