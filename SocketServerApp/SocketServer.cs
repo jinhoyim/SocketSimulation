@@ -60,20 +60,25 @@ namespace SocketServerApp
             string clientId = string.Empty;
             try
             {
-                var connectionAcceptor = new ConnectionAcceptor(client, _clients.Keys);
-                (var accepted, clientId) = await connectionAcceptor.AcceptAsync(cancellationToken);
-                if (accepted)
+                var identifier = new ClientIdentifier(client, _clients.Keys);
+                await identifier.IdentifyClientAsync(cancellationToken);
+                clientId = identifier.ClientId;
+                
+                if (!identifier.IsVerified || string.IsNullOrEmpty(clientId))
                 {
-                    var communicator = new SocketCommunicator(client);
-                    _clients[clientId] = communicator;
-                    if (CanInitAndFirstSend())
-                    {
-                        var initialData = CreateInitialDataRecord();
-                        await FirstSendAsync(initialData, cancellationToken);
-                    }
-
-                    await communicator.ReceiveAsync(cancellationToken);
+                    return;
                 }
+
+                var communicator = new SocketCommunicator(client);
+                _clients[clientId] = communicator;
+                
+                if (CanInitAndFirstSend())
+                {
+                    var initialData = CreateInitialDataRecord();
+                    await FirstSendAsync(initialData, cancellationToken);
+                }
+
+                await communicator.ReceiveAsync(cancellationToken);
             }
             catch (SocketException se)
             {
@@ -91,7 +96,11 @@ namespace SocketServerApp
                 }
                 client.Dispose();
 
-                _clients.TryRemove(clientId, out _);
+                if (!string.IsNullOrEmpty(clientId))
+                {
+                    _clients.TryRemove(clientId, out _);
+                }
+
                 if (_clients.IsEmpty)
                 {
                     await _cts.CancelAsync();
