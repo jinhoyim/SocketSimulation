@@ -1,4 +1,4 @@
-namespace SocketServerApp;
+namespace SocketCommunicationLib.Contract;
 
 public record LockTime(int Hour, int Minute, int Second, int Millisecond)
 {

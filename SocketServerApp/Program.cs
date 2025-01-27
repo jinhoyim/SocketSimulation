@@ -18,7 +18,7 @@ if (!IPAddress.TryParse(serverIpAddress, out var ipAddress))
     return;
 }
 
-var server = SocketServer.Create(ipAddress, serverPort, cts);
+var server = Server.Create(ipAddress, serverPort, cts);
 try
 {
     await server.StartAsync(cts.Token);

@@ -3,18 +3,18 @@ using System.Net.Sockets;
 
 namespace SocketServerApp;
 
-public class ConnectionListener : IDisposable
+public class ServerListener : IDisposable
 {
     private readonly Socket _socket;
     private readonly LingerOption _lingerOption;
 
-    private ConnectionListener(Socket socket, LingerOption lingerOption)
+    private ServerListener(Socket socket, LingerOption lingerOption)
     {
         _socket = socket;
         _lingerOption = lingerOption;
     }
     
-    public static ConnectionListener Create(
+    public static ServerListener Create(
         IPEndPoint ipEndPoint,
         LingerOption lingerOption,
         int socketConnectionQueue)
@@ -26,7 +26,7 @@ public class ConnectionListener : IDisposable
         
         socket.Bind(ipEndPoint);
         socket.Listen(socketConnectionQueue);
-        return new ConnectionListener(socket, lingerOption);
+        return new ServerListener(socket, lingerOption);
     }
 
     public async Task<Socket> AcceptAsync(CancellationToken cancellationToken = default)

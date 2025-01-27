@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using static SocketCommunicationLib.ProtocolConstants;
+using static SocketCommunicationLib.Contract.ProtocolConstants;
 
-namespace SocketServerApp;
+namespace SocketServerApp.Communication;
 
 public class SocketsCommunicator
 {

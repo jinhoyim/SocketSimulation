@@ -1,6 +1,8 @@
-using SocketCommunicationLib;
+using SocketCommunicationLib.Channel;
+using SocketServerApp.Communication;
+using SocketServerApp.Store;
 
-namespace SocketServerApp;
+namespace SocketServerApp.Processing;
 
 public class ServerJobProcessor
 {
@@ -27,7 +29,7 @@ public class ServerJobProcessor
         {
             Console.WriteLine(item);
 
-            var savedCount = await _dataRecordStore.SaveAsync();
+            var savedCount = _dataRecordStore.Save();
             if (savedCount == 4)
             {
                 await ServerTerminate(cancellationToken);

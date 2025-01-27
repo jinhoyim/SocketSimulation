@@ -1,27 +1,30 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using SocketClientApp.Communication;
+using SocketClientApp.Processing;
 using SocketCommunicationLib;
+using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp;
 
-public class SocketClient
+public class Client
 {
     private const int LingerTimeSeconds = 10;
     private readonly string _clientId;
     private readonly IPEndPoint _ipEndPoint;
     private readonly CancellationTokenSource _cts;
 
-    private SocketClient(string clientId, IPAddress ipAddress, int port, CancellationTokenSource cts)
+    private Client(string clientId, IPAddress ipAddress, int port, CancellationTokenSource cts)
     {
         _clientId = clientId;
         _ipEndPoint = new IPEndPoint(ipAddress, port);
         _cts = cts;
     }
 
-    internal static SocketClient Create(string clientId, IPAddress ipAddress, int port, CancellationTokenSource cts)
+    internal static Client Create(string clientId, IPAddress ipAddress, int port, CancellationTokenSource cts)
     {
-        return new SocketClient(clientId, ipAddress, port, cts);
+        return new Client(clientId, ipAddress, port, cts);
     }
 
     internal async Task StartAsync()
@@ -44,14 +47,12 @@ public class SocketClient
             if (connected)
             {
                 var communicator = new SocketCommunicator(server);
-                
                 var jobChannel = new ClientJobChannel<string>();
-                
                 var processor = new ClientJobProcessor(jobChannel, communicator, _cts);
                 
-                var messageListener = new MessageListener(
+                var messageListener = new SocketListener(
                     server,
-                    new MessageStringExtractor(
+                    new SocketMessageStringExtractor(
                         ProtocolConstants.Eom,
                         Encoding.UTF8),
                     jobChannel
@@ -67,7 +68,6 @@ public class SocketClient
                 {
                     Console.WriteLine("Operation cancelled.");
                 }
-
                 Console.WriteLine("End handle.");
             }
             else

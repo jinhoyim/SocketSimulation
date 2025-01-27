@@ -1,8 +1,9 @@
 using System.Net.Sockets;
 using System.Text;
 using SocketCommunicationLib;
+using SocketCommunicationLib.Contract;
 
-namespace SocketClientApp;
+namespace SocketClientApp.Communication;
 
 public class SocketCommunicator
 {

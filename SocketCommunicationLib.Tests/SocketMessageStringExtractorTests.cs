@@ -1,11 +1,11 @@
 ﻿using System.Text;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using static SocketCommunicationLib.ProtocolConstants;
+using static SocketCommunicationLib.Contract.ProtocolConstants;
 
 namespace SocketCommunicationLib.Tests;
 
-public class MessageStringExtractorTests
+public class SocketMessageStringExtractorTests
 {
     private readonly Encoding _encoding = Encoding.UTF8;
     
@@ -15,7 +15,7 @@ public class MessageStringExtractorTests
         var pureMessage = "Test Message";
         var message = $"{pureMessage}{Eom}";
         
-        var sut = new MessageStringExtractor(Eom, _encoding);
+        var sut = new SocketMessageStringExtractor(Eom, _encoding);
         
         var actual = sut.AppendAndExtract(message);
 
@@ -34,7 +34,7 @@ public class MessageStringExtractorTests
     [InlineData($"a<|EOM|")]
     public void Sut_extract_nothing(string message)
     {
-        var sut = new MessageStringExtractor(Eom, _encoding);
+        var sut = new SocketMessageStringExtractor(Eom, _encoding);
         
         var actual = sut.AppendAndExtract(message);
 
@@ -50,7 +50,7 @@ public class MessageStringExtractorTests
         var firstMessage = "First";
         var secondMessage = "Second";
         var message = $"{firstMessage}{Eom}{secondMessage}{Eom}";
-        var sut = new MessageStringExtractor(Eom, _encoding);
+        var sut = new SocketMessageStringExtractor(Eom, _encoding);
         
         var actual = sut.AppendAndExtract(message);
 
@@ -66,7 +66,7 @@ public class MessageStringExtractorTests
     {
         var first = "A";
         var second = "B";
-        var sut = new MessageStringExtractor(Eom, _encoding);
+        var sut = new SocketMessageStringExtractor(Eom, _encoding);
 
         var firstList = sut.AppendAndExtract(first);
         var secondList = sut.AppendAndExtract(second);
@@ -91,7 +91,7 @@ public class MessageStringExtractorTests
         int copyLength = Math.Min(buffer.Length, inputBytes.Length);
         Array.Copy(inputBytes, buffer, copyLength);
         
-        var sut = new MessageStringExtractor(Eom, _encoding);
+        var sut = new SocketMessageStringExtractor(Eom, _encoding);
         var actual = sut.AppendAndExtract(buffer, 0, copyLength);
 
         using (new AssertionScope())
@@ -113,7 +113,7 @@ public class MessageStringExtractorTests
         int copyLength = Math.Min(buffer.Length, inputBytes.Length);
         Array.Copy(inputBytes, buffer, copyLength);
         
-        var sut = new MessageStringExtractor(Eom, _encoding);
+        var sut = new SocketMessageStringExtractor(Eom, _encoding);
         var actual = sut.AppendAndExtract(buffer, 0, copyLength);
 
         using (new AssertionScope())

@@ -1,6 +1,8 @@
-using SocketCommunicationLib;
+using SocketClientApp.Communication;
+using SocketCommunicationLib.Channel;
+using SocketCommunicationLib.Contract;
 
-namespace SocketClientApp;
+namespace SocketClientApp.Processing;
 
 public class ClientJobProcessor
 {

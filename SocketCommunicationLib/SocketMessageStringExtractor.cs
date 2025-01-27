@@ -2,13 +2,13 @@ using System.Text;
 
 namespace SocketCommunicationLib;
 
-public class MessageStringExtractor
+public class SocketMessageStringExtractor
 {
     private readonly string _delimiter;
     private readonly StringBuilder _stringBuilder = new();
     private readonly Encoding _encoding;
 
-    public MessageStringExtractor(string delimiter, Encoding encoding)
+    public SocketMessageStringExtractor(string delimiter, Encoding encoding)
     {
         _delimiter = delimiter;
         _encoding = encoding;

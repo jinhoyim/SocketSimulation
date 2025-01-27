@@ -1,4 +1,4 @@
-﻿namespace SocketCommunicationLib;
+﻿namespace SocketCommunicationLib.Contract;
 
 public static class ProtocolConstants
 {

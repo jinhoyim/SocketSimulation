@@ -1,9 +1,8 @@
-using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
-using static SocketCommunicationLib.ProtocolConstants;
+using static SocketCommunicationLib.Contract.ProtocolConstants;
 
-namespace SocketServerApp;
+namespace SocketServerApp.Communication;
 
 public class ClientIdentifier
 {

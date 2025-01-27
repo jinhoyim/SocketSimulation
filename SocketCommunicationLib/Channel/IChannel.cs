@@ -1,4 +1,4 @@
-namespace SocketCommunicationLib;
+namespace SocketCommunicationLib.Channel;
 
 public interface IChannel<T>
 {

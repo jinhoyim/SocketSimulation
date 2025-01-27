@@ -25,7 +25,7 @@ if (!IPAddress.TryParse(serverIpAddress, out var ipAddress))
     return;
 }
 
-var client = SocketClient.Create(clientId, ipAddress, serverPort, cts);
+var client = Client.Create(clientId, ipAddress, serverPort, cts);
 try
 {
     await client.StartAsync();

@@ -1,8 +1,8 @@
 using System.Net.Sockets;
 using System.Text;
-using static SocketCommunicationLib.ProtocolConstants;
+using static SocketCommunicationLib.Contract.ProtocolConstants;
 
-namespace SocketClientApp;
+namespace SocketClientApp.Communication;
 
 public class Connector(Socket server, string clientId)
 {

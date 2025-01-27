@@ -1,23 +1,23 @@
 using System.Threading.Channels;
-using SocketCommunicationLib;
+using SocketCommunicationLib.Channel;
 
-namespace SocketClientApp;
+namespace SocketServerApp;
 
-public class ClientJobChannel<T> : IChannel<T>
+public class ServerJobChannel<T> : IChannel<T>
 {
     private readonly Channel<T> _channel;
 
-    public ClientJobChannel()
+    public ServerJobChannel()
     {
         _channel = Channel.CreateUnbounded<T>();
     }
     
-    public ValueTask WriteAsync(T item, CancellationToken cancellationToken = default)
+    public ValueTask WriteAsync(T item, CancellationToken cancellationToken)
     {
         return _channel.Writer.WriteAsync(item, cancellationToken);
     }
 
-    public IAsyncEnumerable<T> ReadAllAsync(CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<T> ReadAllAsync(CancellationToken cancellationToken)
     {
         return _channel.Reader.ReadAllAsync(cancellationToken);
     }
@@ -26,7 +26,7 @@ public class ClientJobChannel<T> : IChannel<T>
     {
         _channel.Writer.Complete(error);
     }
-    
+
     public Task ReaderCompletion()
     {
         return _channel.Reader.Completion;
