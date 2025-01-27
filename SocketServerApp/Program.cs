@@ -21,8 +21,14 @@ if (!IPAddress.TryParse(serverIpAddress, out var ipAddress))
 var server = SocketServer.Create(ipAddress, serverPort, cts);
 try
 {
-    await server.StartAsync();
+    await server.StartAsync(cts.Token);
     Console.WriteLine("App Stopped.");
+}
+catch (OperationCanceledException oce)
+{
+#if DEBUG
+    Console.WriteLine($"Operation Canceled : {oce.Message}");
+#endif
 }
 catch (Exception ex)
 {

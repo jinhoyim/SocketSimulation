@@ -1,13 +1,15 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Security;
 using System.Text;
 
 namespace SocketServerApp
 {
     public class SocketServer
     {
-        private const int LingerTimeSeconds = 10;
+        private readonly LingerOption _lingerOption = new(true, 10);
+        private readonly int _socketConnectionQueue = 1000;
         private readonly IPEndPoint _ipEndPoint;
         private readonly CancellationTokenSource _cts;
 
@@ -30,54 +32,25 @@ namespace SocketServerApp
             return new SocketServer(ipAddress, port, cts);
         }
 
-        internal async Task StartAsync()
+        internal async Task StartAsync(CancellationToken cancellationToken)
         {
-            var cancellationToken = _cts.Token;
+            using var connectionListener = ConnectionListener.Create(_ipEndPoint, _lingerOption, _socketConnectionQueue);
             
-            var listener = new Socket(
-                _ipEndPoint.AddressFamily,
-                SocketType.Stream,
-                ProtocolType.Tcp);
-            listener.LingerState = new LingerOption(true, LingerTimeSeconds);
-            await ListenAsync(listener, cancellationToken);
-        }
-
-        private async Task ListenAsync(Socket listener, CancellationToken cancellationToken)
-        {
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                listener.Bind(_ipEndPoint);
-                listener.Listen(1000);
-                
-                while (!cancellationToken.IsCancellationRequested)
+                try
                 {
-                    var client = await listener.AcceptAsync(cancellationToken);
-                    client.LingerState = new LingerOption(true, LingerTimeSeconds);
-
+                    var client = await connectionListener.AcceptAsync(cancellationToken);
                     _ = Task.Run(async () =>
                     {
                         await ClientHandleAsync(client, cancellationToken);
                         Console.WriteLine("Client Socket closed.");
                     }, cancellationToken);
                 }
-            }
-            catch (OperationCanceledException oce)
-            {
-#if DEBUG
-                Console.WriteLine($"Operation Canceled : {oce.Message}");
-#endif
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"System Error : {ex}");
-            }
-            finally
-            {
-                if (listener.Connected)
+                catch (InvalidOperationException invalidOperationException)
                 {
-                    listener.Shutdown(SocketShutdown.Both);
+                    Console.WriteLine($"Socket cannot to accept. {invalidOperationException}");
                 }
-                listener.Dispose();
             }
             Console.WriteLine("Listener socket closed.");
         }
