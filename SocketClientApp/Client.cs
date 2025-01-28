@@ -52,6 +52,7 @@ public class Client
                     jobChannel,
                     communicator,
                     new MessageConverter(),
+                    new LockTimeHandler(communicator),
                     _cts);
                 
                 var messageListener = new SocketListener(

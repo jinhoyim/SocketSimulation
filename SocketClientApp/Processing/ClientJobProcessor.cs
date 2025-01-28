@@ -12,17 +12,20 @@ public class ClientJobProcessor
     private readonly SocketCommunicator _communicator;
     private readonly CancellationTokenSource _cts;
     private readonly MessageConverter _messageConverter;
+    private readonly LockTimeHandler _lockTimeHandler;
 
     public ClientJobProcessor(
         IChannel<string> channel,
         SocketCommunicator communicator,
         MessageConverter messageConverter,
+        LockTimeHandler lockTimeHandler,
         CancellationTokenSource cts)
     {
         _channel = channel;
         _communicator = communicator;
         _cts = cts;
         _messageConverter = messageConverter;
+        _lockTimeHandler = lockTimeHandler;
     }
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
@@ -35,7 +38,7 @@ public class ClientJobProcessor
             switch (message.Type)
             {
                 case ProtocolConstants.LockTime:
-                    await HandleLockTimeAsync(message.Content, cancellationToken);
+                    await _lockTimeHandler.HandleLockTimeAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.DataRecordWithNext:
                     await HandleQueryResultAsync(message.Content, cancellationToken);
@@ -88,26 +91,6 @@ public class ClientJobProcessor
         
         // 수신한 NextId를 사용하여 2초 이내 랜덤 LockTime, 새로운 데이터를 생성해서 서버에 저장 요청
         Console.WriteLine($"SendNextData: {withNext.NextId}");
-    }
-
-    private async Task HandleLockTimeAsync(string content, CancellationToken cancellationToken)
-    {
-        Console.WriteLine($"LockTime: {content}");
-        DataRecord? dataRecord = Deserialize<DataRecord>(content);
-        if (dataRecord is not null)
-        {
-            await WaitLockTimeAsync(dataRecord.LockTime, cancellationToken);
-            await _communicator.SendQueryAsync(dataRecord, cancellationToken);
-        }
-    }
-
-    private async Task WaitLockTimeAsync(LockTime lockTime, CancellationToken cancellationToken)
-    {
-        var delay = lockTime.TimeLeftToExpire(DateTime.Now);
-        if (delay > TimeSpan.Zero)
-        {
-            await Task.Delay(delay, cancellationToken);
-        }
     }
 
     private T? Deserialize<T>(string json)

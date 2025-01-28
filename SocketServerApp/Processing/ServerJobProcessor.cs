@@ -61,8 +61,8 @@ public class ServerJobProcessor
 
     private async Task ServerTerminate(CancellationToken cancellationToken)
     {
-        await _socketsCommunicator.SendServerTerminateAsync(cancellationToken);
-        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-        await _cts.CancelAsync();
+        // await _socketsCommunicator.SendServerTerminateAsync(cancellationToken);
+        // await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+        // await _cts.CancelAsync();
     }
 }
