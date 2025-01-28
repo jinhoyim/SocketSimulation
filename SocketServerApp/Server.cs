@@ -86,7 +86,7 @@ namespace SocketServerApp
 
                 var communicator = new SocketCommunicator(client);
                 _clients[clientId] = communicator;
-                var jobChannel = new ServerJobChannel<string>();
+                var jobChannel = new ServerJobChannel<Message>();
                 var processor = new ServerJobProcessor(
                     jobChannel,
                     clientId,

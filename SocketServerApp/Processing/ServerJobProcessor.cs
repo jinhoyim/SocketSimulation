@@ -7,7 +7,7 @@ namespace SocketServerApp.Processing;
 
 public class ServerJobProcessor
 {
-    private readonly IChannel<string> _channel;
+    private readonly IChannel<Message> _channel;
     private readonly DataStore _dataStore;
     private readonly MessageConverter _messageConverter;
     private readonly string _clientId;
@@ -15,7 +15,7 @@ public class ServerJobProcessor
     private readonly ServerTerminator _serverTerminator;
 
     public ServerJobProcessor(
-        IChannel<string> channel,
+        IChannel<Message> channel,
         string clientId,
         DataStore dataStore,
         QueryDataHandler queryHandler,
@@ -32,9 +32,8 @@ public class ServerJobProcessor
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        await foreach (var item in _channel.ReadAllAsync(cancellationToken))
+        await foreach (Message message in _channel.ReadAllAsync(cancellationToken))
         {
-            var message = _messageConverter.Convert(item);
             if (message == Message.Empty) continue;
 
             switch (message.Type)

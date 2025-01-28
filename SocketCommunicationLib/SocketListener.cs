@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using SocketCommunicationLib.Channel;
+using SocketCommunicationLib.Contract;
 
 namespace SocketCommunicationLib;
 
@@ -7,12 +8,12 @@ public class SocketListener
 {
     private readonly Socket _socket;
     private readonly SocketMessageStringExtractor _socketMessageStringExtractor;
-    private readonly IChannel<string> _channel;
+    private readonly IChannel<Message> _channel;
 
     public SocketListener(
         Socket socket,
         SocketMessageStringExtractor socketMessageStringExtractor,
-        IChannel<string> channel)
+        IChannel<Message> channel)
     {
         _socket = socket;
         _socketMessageStringExtractor = socketMessageStringExtractor;
@@ -21,6 +22,7 @@ public class SocketListener
 
     public async Task ListenAsync(CancellationToken cancellationToken)
     {
+        MessageConverter converter = new MessageConverter();
         while (!cancellationToken.IsCancellationRequested)
         {
             var buffer = new byte[1024];
@@ -28,7 +30,8 @@ public class SocketListener
             var messages = _socketMessageStringExtractor.AppendAndExtract(buffer, 0, receivedDataLength);
             foreach (var item in messages)
             {
-                await _channel.WriteAsync(item, cancellationToken);
+                Message message = converter.Convert(item);
+                await _channel.WriteAsync(message, cancellationToken);
             }
         }
     }
