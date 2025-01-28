@@ -1,5 +1,6 @@
 using System.Text.Json;
 using SocketClientApp.Communication;
+using SocketCommunicationLib;
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
 
@@ -111,6 +112,6 @@ public class ClientJobProcessor
 
     private T? Deserialize<T>(string json)
     {
-        return JsonSerializer.Deserialize<T>(json);
+        return JsonUtils.Deserialize<T>(json);
     }
 }

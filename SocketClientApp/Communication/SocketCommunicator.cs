@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 using System.Text;
-using System.Text.Json;
+using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp.Communication;
@@ -21,7 +21,7 @@ public class SocketCommunicator
     
     public async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)
     {
-        var json = JsonSerializer.Serialize(data);
+        var json = JsonUtils.Serialize(data);
         string message = $"{prefix}{json}{ProtocolConstants.Eom}";
         var messageBytes = Encoding.UTF8.GetBytes(message);
         await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
