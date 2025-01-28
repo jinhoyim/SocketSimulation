@@ -8,10 +8,10 @@ namespace SocketServerApp.Processing;
 public class QueryDataHandler
 {
     private readonly string _clientId;
-    private readonly SocketCommunicator _communicator;
+    private readonly ServerCommunicator _communicator;
     private readonly DataStore _store;
 
-    public QueryDataHandler(string clientId, SocketCommunicator communicator, DataStore store)
+    public QueryDataHandler(string clientId, ServerCommunicator communicator, DataStore store)
     {
         _clientId = clientId;
         _communicator = communicator;

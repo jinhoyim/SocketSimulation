@@ -53,7 +53,7 @@ public class Client
             
             if (connected)
             {
-                var communicator = new SocketCommunicator(server);
+                var communicator = new ClientCommunicator(server);
                 var jobChannel = new ClientJobChannel<Message>();
                 var processor = new ClientJobProcessor(
                     jobChannel,

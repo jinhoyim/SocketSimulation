@@ -6,10 +6,10 @@ namespace SocketClientApp.Processing;
 
 public class QueryHandler
 {
-    private readonly SocketCommunicator _communicator;
+    private readonly ClientCommunicator _communicator;
     private readonly LockTimesStore _lockTimesStore;
 
-    public QueryHandler(SocketCommunicator communicator, LockTimesStore lockTimesStore)
+    public QueryHandler(ClientCommunicator communicator, LockTimesStore lockTimesStore)
     {
         _communicator = communicator;
         _lockTimesStore = lockTimesStore;

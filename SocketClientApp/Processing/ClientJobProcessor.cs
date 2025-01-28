@@ -9,7 +9,7 @@ namespace SocketClientApp.Processing;
 public class ClientJobProcessor
 {
     private readonly IChannel<Message> _channel;
-    private readonly SocketCommunicator _communicator;
+    private readonly ClientCommunicator _communicator;
     private readonly CancellationTokenSource _cts;
     private readonly MessageConverter _messageConverter;
     private readonly QuerySuccessfulHandler _querySuccessfulHandler;
@@ -18,7 +18,7 @@ public class ClientJobProcessor
 
     public ClientJobProcessor(
         IChannel<Message> channel,
-        SocketCommunicator communicator,
+        ClientCommunicator communicator,
         MessageConverter messageConverter,
         QuerySuccessfulHandler querySuccessfulHandler,
         QueryHandler queryHandler,

@@ -23,7 +23,7 @@ namespace SocketServerApp
         private readonly int _startMinConnections = 5;
         
         private readonly Lock _lock = new();
-        private readonly ConcurrentDictionary<string, SocketCommunicator> _clients = new();
+        private readonly ConcurrentDictionary<string, ServerCommunicator> _clients = new();
         
         
         private Server(IPAddress ipAddress, int port, CancellationTokenSource cts)
@@ -86,7 +86,7 @@ namespace SocketServerApp
                     return;
                 }
 
-                var communicator = new SocketCommunicator(client);
+                var communicator = new ServerCommunicator(client);
                 _clients[clientId] = communicator;
                 var jobChannel = new ServerJobChannel<Message>();
                 var processor = new ServerJobProcessor(

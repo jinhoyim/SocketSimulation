@@ -11,10 +11,10 @@ public class QuerySuccessfulHandler
     private readonly OutputWriter _writer;
     private readonly Random _random;
     private readonly int _maxMilliseconds = 2000;
-    private readonly SocketCommunicator _communicator;
+    private readonly ClientCommunicator _communicator;
 
     public QuerySuccessfulHandler(
-        SocketCommunicator communicator,
+        ClientCommunicator communicator,
         CountStore countStore,
         OutputWriter writer)
     {
