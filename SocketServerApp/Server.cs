@@ -83,6 +83,7 @@ namespace SocketServerApp
                     communicator,
                     _dataRecordStore,
                     _socketsCommunicator,
+                    new QueryDataHandler(clientId, communicator, _dataRecordStore),
                     new MessageConverter(),
                     _cts);
 

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
 using SocketServerApp.Communication;
@@ -16,6 +15,7 @@ public class ServerJobProcessor
     private readonly MessageConverter _messageConverter;
     private readonly SocketCommunicator _communicator;
     private readonly string _clientId;
+    private readonly QueryDataHandler _queryHandler;
 
     public ServerJobProcessor(
         IChannel<string> channel,
@@ -23,6 +23,7 @@ public class ServerJobProcessor
         SocketCommunicator communicator,
         DataRecordStore dataRecordStore,
         SocketsCommunicator socketsCommunicator,
+        QueryDataHandler queryHandler,
         MessageConverter messageConverter,
         CancellationTokenSource cts)
     {
@@ -31,6 +32,7 @@ public class ServerJobProcessor
         _communicator = communicator;
         _dataRecordStore = dataRecordStore;
         _socketsCommunicator = socketsCommunicator;
+        _queryHandler = queryHandler;
         _messageConverter = messageConverter;
         _cts = cts;
     }
@@ -45,7 +47,7 @@ public class ServerJobProcessor
             switch (message.Type)
             {
                 case QueryData:
-                    await HandleQueryData(message.Content, cancellationToken); 
+                    await _queryHandler.HandleAsync(message.Content, cancellationToken); 
                     break;
             }
 
@@ -57,51 +59,10 @@ public class ServerJobProcessor
         }
     }
 
-    private async Task HandleQueryData(string content, CancellationToken cancellationToken)
-    {
-        DataRecord? body = Deserialize<DataRecord>(content);
-
-        if (body is null)
-        {
-            await _communicator.SendBadRequestAsync(QueryData, cancellationToken);
-            return;
-        }
-
-        string recordId = body.Id;
-            
-        if (!_dataRecordStore.TryGet(recordId, out var dataRecord))
-        {
-            await _communicator.SendEmptyDataAsync($"Id: {recordId}", cancellationToken);
-            return;
-        }
-
-        if (!dataRecord.LockTime.IsExpired(DateTime.Now))
-        {
-            await _communicator.SendDataLockedAsync($"Id: {recordId}", cancellationToken);
-            return;
-        }
-
-        if (_dataRecordStore.TryRemove(dataRecord))
-        {
-            _dataRecordStore.TryCreateNext(_clientId, out var nextId);
-            var recordWithNext = new DataRecordWithNext(dataRecord, nextId);
-            await _communicator.SendQueryResultAsync(recordWithNext, cancellationToken);
-        }
-        else
-        {
-            await _communicator.SendEmptyDataAsync($"Id: {recordId}", cancellationToken);
-        }
-    }
-
     private async Task ServerTerminate(CancellationToken cancellationToken)
     {
         await _socketsCommunicator.SendServerTerminateAsync(cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
         await _cts.CancelAsync();
-    }
-
-    private T? Deserialize<T>(string json)
-    {
-        return JsonSerializer.Deserialize<T>(json);
     }
 }
