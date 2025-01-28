@@ -27,11 +27,11 @@ public class DataStore
 
     public DataRecord InitialDataRecord()
     {
-        var initValue = 1;
-        var lockTime = LockTime.From(DateTime.Now.AddSeconds(2));
+        var dateTime = DateTime.Now.AddSeconds(2);
+        var lockTime = LockTime.From(dateTime);
         var number = Interlocked.Increment(ref _increment);
         var id = number.ToString();
-        return new DataRecord(id, lockTime, string.Empty, initValue);
+        return new DataRecord(id, lockTime, string.Empty, dateTime.Millisecond);
     }
     
     public bool TryGet(string id, [MaybeNullWhen(false)] out DataRecord record)

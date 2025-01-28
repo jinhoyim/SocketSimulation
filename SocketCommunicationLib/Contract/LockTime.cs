@@ -18,4 +18,6 @@ public record LockTime(int Hour, int Minute, int Second, int Millisecond)
     }
     
     public bool IsExpired(DateTime utcNow) => TimeLeftToExpire(utcNow) <= TimeSpan.Zero;
+    
+    public override string ToString() => $"{Hour:00}:{Minute:00}:{Second:00}:{Millisecond:000}";
 }

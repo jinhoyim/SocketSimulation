@@ -18,8 +18,13 @@ public class SocketCommunicator
     {
         await SendAsync(dataRecord, ProtocolConstants.QueryData, cancellationToken);
     }
+
+    public async Task SendNextDataAsync<T>(T data, CancellationToken cancellationToken)
+    {
+        await SendAsync(data, ProtocolConstants.NextData, cancellationToken);
+    }
     
-    public async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)
+    private async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)
     {
         var json = JsonUtils.Serialize(data);
         string message = $"{prefix}{json}{ProtocolConstants.Eom}";

@@ -49,6 +49,9 @@ public class ServerJobProcessor
                 case QueryData:
                     await _queryHandler.HandleAsync(message.Content, cancellationToken); 
                     break;
+                case NextData:
+                    Console.WriteLine($"Next data received: {message}");
+                    break;
             }
 
             // var savedCount = _dataRecordStore.Save();

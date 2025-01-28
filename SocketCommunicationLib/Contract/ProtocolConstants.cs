@@ -14,4 +14,5 @@ public static class ProtocolConstants
     public const string LockTime = "<|LOCKTIME|JSON|>";
     public const string DataRecordWithNext = "<|DataRecordWithNext|JSON|>";
     public const string ErrorBadRequest = "<|ERRORBADREQUEST|>";
+    public const string NextData = "<|NEXTDATA|JSON|>";
 }

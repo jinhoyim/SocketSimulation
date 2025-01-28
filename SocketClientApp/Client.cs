@@ -57,7 +57,7 @@ public class Client
                     jobChannel,
                     communicator,
                     new MessageConverter(),
-                    new QueryResultHandler(store, logger),
+                    new QueryResultHandler(communicator, store, logger),
                     new LockTimeHandler(communicator),
                     _cts);
                 

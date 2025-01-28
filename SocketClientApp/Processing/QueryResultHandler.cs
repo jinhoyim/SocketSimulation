@@ -10,15 +10,19 @@ public class QueryResultHandler
 {
     private readonly DataStore _store;
     private readonly OutputWriter _writer;
+    private readonly Random _random;
     private readonly int _maxMilliseconds = 2000;
+    private readonly SocketCommunicator _communicator;
 
-    public QueryResultHandler(DataStore store, OutputWriter writer)
+    public QueryResultHandler(SocketCommunicator communicator, DataStore store, OutputWriter writer)
     {
+        _random = new Random();
+        _communicator = communicator;
         _store = store;
         _writer = writer;
     }
 
-    public void Handle(string content)
+    public async Task HandleAsync(string content, CancellationToken cancellationToken)
     {
         var withNext = JsonUtils.Deserialize<DataRecordWithNext>(content);
         if (withNext is null) return;
@@ -26,5 +30,24 @@ public class QueryResultHandler
         var successful = _store.IncrementSuccessful();
         
         _writer.Write(withNext.DataRecord, successful);
+
+        await SendNextDataAsync(cancellationToken, withNext);
+    }
+
+    private async Task SendNextDataAsync(CancellationToken cancellationToken, DataRecordWithNext withNext)
+    {
+        if (withNext.NextId is not null)
+        {
+            var nextData = CreateNewData(withNext.NextId);
+            await _communicator.SendNextDataAsync(nextData, cancellationToken);
+        }
+    }
+
+    private NextDataValue CreateNewData(string nextId)
+    {
+        var nextMilliseconds = _random.Next(_maxMilliseconds);
+        var nextDateTime = DateTime.Now.AddMilliseconds(nextMilliseconds);
+        LockTime lockTime = LockTime.From(nextDateTime);
+        return new NextDataValue(nextId, lockTime, lockTime.Millisecond);
     }
 }

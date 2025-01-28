@@ -42,7 +42,7 @@ public class ClientJobProcessor
                     await _lockTimeHandler.HandleLockTimeAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.DataRecordWithNext:
-                    _queryResultHandler.Handle(message.Content);
+                    await _queryResultHandler.HandleAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.ErrorEmptyData:
                     Console.WriteLine($"Error: {ProtocolConstants.ErrorEmptyData}");
