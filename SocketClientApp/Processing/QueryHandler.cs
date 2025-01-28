@@ -1,7 +1,5 @@
 using SocketClientApp.Communication;
 using SocketClientApp.Store;
-using SocketCommunicationLib;
-using SocketCommunicationLib.Contract;
 using SocketCommunicationLib.Model;
 
 namespace SocketClientApp.Processing;
@@ -17,23 +15,16 @@ public class QueryHandler
         _lockTimesStore = lockTimesStore;
     }
 
-    public async Task QueryAfterLockTimeAsync(string content, CancellationToken cancellationToken)
+    public async Task QueryAfterLockTimeAsync(DataRecord dataRecord, CancellationToken cancellationToken)
     {
-        DataRecord? dataRecord = JsonUtils.Deserialize<DataRecord>(content);
-        if (dataRecord is null) return;
-
         _lockTimesStore.SaveLockTime(dataRecord.Id, dataRecord.LockTime);
         
         await WaitLockTimeAsync(dataRecord.LockTime, cancellationToken);
         await _communicator.SendQueryAsync(dataRecord.Id, cancellationToken);
     }
 
-    public async Task RetryQueryAfterLockTimeAsync(string content, CancellationToken cancellationToken)
+    public async Task RetryQueryAfterLockTimeAsync(string id, CancellationToken cancellationToken)
     {
-        var errorData = JsonUtils.Deserialize<ErrorData<string>>(content);
-        if (errorData is null) return;
-
-        var id = errorData.Data;
         if (!_lockTimesStore.TryGetLockTime(id, out var lockTime)) return;
         
         await WaitLockTimeAsync(lockTime, cancellationToken);

@@ -16,28 +16,28 @@ public class SocketCommunicator
 
     public async Task SendEmptyDataAsync<T>(T data, CancellationToken cancellationToken)
     {
-        await SendAsync(data, ProtocolConstants.ErrorEmptyData, cancellationToken);
+        await SendAsync(data, DataProtocolConstants.ErrorEmptyData, cancellationToken);
     }
 
     public async Task SendDataLockedAsync<T>(T data, CancellationToken cancellationToken)
     {
-        await SendAsync(data, ProtocolConstants.ErrorDataLocked, cancellationToken);
+        await SendAsync(data, DataProtocolConstants.ErrorDataLocked, cancellationToken);
     }
     
     public async Task SendBadRequestAsync(string requestPrefix, CancellationToken cancellationToken)
     {
         string message = $"Request: {requestPrefix}";
-        await SendStringAsync(message, ProtocolConstants.ErrorBadRequest, cancellationToken);
+        await SendStringAsync(message, DataProtocolConstants.ErrorBadRequest, cancellationToken);
     }
 
     public async Task SendLockTimeAsync<T>(T data, CancellationToken cancellationToken)
     {
-        await SendAsync(data, ProtocolConstants.LockTime, cancellationToken);
+        await SendAsync(data, DataProtocolConstants.DataLockTime, cancellationToken);
     }
 
     public async Task SendQueryResultAsync<T>(T data, CancellationToken cancellationToken)
     {
-        await SendAsync(data, ProtocolConstants.DataRecordWithNext, cancellationToken);
+        await SendAsync(data, DataProtocolConstants.DataWithNext, cancellationToken);
     }
 
     private async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)

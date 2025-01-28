@@ -1,7 +1,5 @@
 using SocketClientApp.Output;
 using SocketClientApp.Store;
-using SocketCommunicationLib;
-using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp.Processing;
 
@@ -18,30 +16,24 @@ public class ErrorHandler
         _lockTimesStore = lockTimesStore;
     }
 
-    public void WriteErrorDataLocked(string content)
+    public void WriteErrorDataLocked(string errorMessage)
     {
         _countStore.IncrementLockingFailed();
         
-        ErrorData<string>? errorData = JsonUtils.Deserialize<ErrorData<string>>(content);
-        if (errorData is null) return;
-        
-        WriteError(errorData);
+        WriteError(errorMessage);
     }
 
-    public void WriteErrorEmptyData(string content)
+    public void WriteErrorEmptyData(string errorMessage, string recordId)
     {
         _countStore.IncrementEmptyFailed();
 
-        ErrorData<string>? errorData = JsonUtils.Deserialize<ErrorData<string>>(content);
-        if (errorData is null) return;
-        
-        WriteError(errorData);
-        _lockTimesStore.TryRemoveLockTime(errorData.Data);
+        WriteError(errorMessage);
+        _lockTimesStore.TryRemoveLockTime(recordId);
     }
 
-    private void WriteError(ErrorData<string> errorData)
+    private void WriteError(string errorMessage)
     {
         var (lockingCount, emptyCount) = _countStore.GetFailedCounts();
-        _writer.WriteError(errorData.Message, lockingCount, emptyCount);
+        _writer.WriteError(errorMessage, lockingCount, emptyCount);
     }
 }

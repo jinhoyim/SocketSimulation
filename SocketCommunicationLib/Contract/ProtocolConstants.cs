@@ -2,17 +2,15 @@
 
 public static class ProtocolConstants
 {
-    public const string Eom = "<|EOM|>";
-    public const string Connect = "<|CONNECT|>";
-    public const string Success = "<|SUCCESS|>";
-    public const string Error = "<|ERROR|>";
-    public const string ReadyConnect = "<|READYCONNECT|>";
-    public const string ServerTerminated = "<|SERVERTERMINATED|>";
-    public const string QueryData = "<|QUERYDATA|>";
-    public const string ErrorEmptyData = "<|ERROREMPTYDATA|>";
-    public const string ErrorDataLocked = "<|ERRORDATALOCKED|>";
-    public const string LockTime = "<|LOCKTIME|JSON|>";
-    public const string DataRecordWithNext = "<|DataRecordWithNext|JSON|>";
-    public const string ErrorBadRequest = "<|ERRORBADREQUEST|>";
-    public const string NextData = "<|NEXTDATA|JSON|>";
+    // 모든 메시지 마지막 구분자
+    public const string Eom = "<|SYSTEM|EOM|>";
+
+    // 서버 종료
+    public const string ServerTerminated = "<|SYSTEM|SERVERTERMINATED|>";
+
+    // 접속에 사용
+    public const string ReadyConnect = "<|CONNECT|READY|>";
+    public const string Connect = "<|CONNECT|REQUEST>";
+    public const string Success = "<|CONNECT|SUCCESS|>"; // ClientId 식별 성공
+    public const string Error = "<|CONNECT|ERROR|>"; // ClientId 식별 실패
 }

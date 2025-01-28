@@ -21,6 +21,13 @@ public class MessageConverter
             {
                 var type = match.Groups[1].Value;
                 var content = match.Groups[2].Value;
+
+                if (DataMessageDeserializers.Deserializers.ContainsKey(type))
+                {
+                    var body = DataMessageDeserializers.Deserializers[type].Invoke(content) ?? string.Empty;
+                    return new Message(type, body);
+                }
+                
                 return new Message(type, content);
             }
             default:

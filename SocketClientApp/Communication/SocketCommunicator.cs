@@ -16,12 +16,12 @@ public class SocketCommunicator
     
     public async Task SendQueryAsync(string id, CancellationToken cancellationToken)
     {
-        await SendStringAsync(id, ProtocolConstants.QueryData, cancellationToken);
+        await SendStringAsync(id, DataProtocolConstants.QueryData, cancellationToken);
     }
 
     public async Task SendNextDataAsync<T>(T data, CancellationToken cancellationToken)
     {
-        await SendAsync(data, ProtocolConstants.NextData, cancellationToken);
+        await SendAsync(data, DataProtocolConstants.NextData, cancellationToken);
     }
     
     private async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)

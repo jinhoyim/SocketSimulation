@@ -1,7 +1,7 @@
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
 using SocketServerApp.Store;
-using static SocketCommunicationLib.Contract.ProtocolConstants;
+using static SocketCommunicationLib.Contract.DataProtocolConstants;
 
 namespace SocketServerApp.Processing;
 
@@ -38,8 +38,8 @@ public class ServerJobProcessor
 
             switch (message.Type)
             {
-                case QueryData:
-                    await _queryHandler.HandleAsync(message.Content, cancellationToken); 
+                case QueryData when message.Content is string recordId:
+                    await _queryHandler.HandleAsync(recordId, cancellationToken); 
                     break;
                 case NextData:
                     Console.WriteLine($"Next data received: {message}");

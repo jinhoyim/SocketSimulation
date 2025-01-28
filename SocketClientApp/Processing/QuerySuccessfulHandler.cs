@@ -1,7 +1,6 @@
 using SocketClientApp.Communication;
 using SocketClientApp.Output;
 using SocketClientApp.Store;
-using SocketCommunicationLib;
 using SocketCommunicationLib.Model;
 
 namespace SocketClientApp.Processing;
@@ -25,11 +24,8 @@ public class QuerySuccessfulHandler
         _writer = writer;
     }
 
-    public async Task SaveAndNextAsync(string content, CancellationToken cancellationToken)
+    public async Task SaveAndNextAsync(DataRecordWithNext withNext, CancellationToken cancellationToken)
     {
-        var withNext = JsonUtils.Deserialize<DataRecordWithNext>(content);
-        if (withNext is null) return;
-
         var successful = _countStore.IncrementSuccessful();
 
         _writer.Write(withNext.DataRecord, successful);

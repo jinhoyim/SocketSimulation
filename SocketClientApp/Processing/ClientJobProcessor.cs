@@ -1,6 +1,8 @@
 using SocketClientApp.Communication;
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
+using SocketCommunicationLib.Model;
+using static SocketCommunicationLib.Contract.DataProtocolConstants;
 
 namespace SocketClientApp.Processing;
 
@@ -38,23 +40,25 @@ public class ClientJobProcessor
         {
             if (message == Message.Empty) continue;
 
-            switch (message.Type)
+            var (type, content) = message;
+
+            switch (type)
             {
-                case ProtocolConstants.LockTime:
-                    await _queryHandler.QueryAfterLockTimeAsync(message.Content, cancellationToken);
+                case DataLockTime when content is DataRecord record:
+                    await _queryHandler.QueryAfterLockTimeAsync(record, cancellationToken);
                     break;
-                case ProtocolConstants.DataRecordWithNext:
-                    await _querySuccessfulHandler.SaveAndNextAsync(message.Content, cancellationToken);
+                case DataWithNext when content is DataRecordWithNext withNext:
+                    await _querySuccessfulHandler.SaveAndNextAsync(withNext, cancellationToken);
                     break;
-                case ProtocolConstants.ErrorEmptyData:
-                    _errorHandler.WriteErrorEmptyData(message.Content);
+                case ErrorEmptyData when content is ErrorData<string> errorData:
+                    _errorHandler.WriteErrorEmptyData(errorData.Message, errorData.Data);
                     break;
-                case ProtocolConstants.ErrorDataLocked:
-                    _errorHandler.WriteErrorDataLocked(message.Content);
-                    await _queryHandler.RetryQueryAfterLockTimeAsync(message.Content, cancellationToken);
+                case ErrorDataLocked when content is ErrorData<string> errorData:
+                    _errorHandler.WriteErrorDataLocked(errorData.Message);
+                    await _queryHandler.RetryQueryAfterLockTimeAsync(errorData.Data, cancellationToken);
                     break;
-                case ProtocolConstants.ErrorBadRequest:
-                    Console.WriteLine($"Error: {ProtocolConstants.ErrorBadRequest}");
+                case ErrorBadRequest:
+                    Console.WriteLine($"Error: {ErrorBadRequest}");
                     break;
                 case ProtocolConstants.ServerTerminated:
                     await _cts.CancelAsync();
