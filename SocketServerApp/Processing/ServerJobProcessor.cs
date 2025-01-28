@@ -1,6 +1,9 @@
+using System.Text.Json;
 using SocketCommunicationLib.Channel;
+using SocketCommunicationLib.Contract;
 using SocketServerApp.Communication;
 using SocketServerApp.Store;
+using static SocketCommunicationLib.Contract.ProtocolConstants;
 
 namespace SocketServerApp.Processing;
 
@@ -10,30 +13,83 @@ public class ServerJobProcessor
     private readonly CancellationTokenSource _cts;
     private readonly DataRecordStore _dataRecordStore;
     private readonly SocketsCommunicator _socketsCommunicator;
+    private readonly MessageConverter _messageConverter;
+    private readonly SocketCommunicator _communicator;
+    private readonly string _clientId;
 
     public ServerJobProcessor(
         IChannel<string> channel,
-        CancellationTokenSource cts,
+        string clientId,
+        SocketCommunicator communicator,
         DataRecordStore dataRecordStore,
-        SocketsCommunicator socketsCommunicator)
+        SocketsCommunicator socketsCommunicator,
+        MessageConverter messageConverter,
+        CancellationTokenSource cts)
     {
         _channel = channel;
-        _cts = cts;
+        _clientId = clientId;
+        _communicator = communicator;
         _dataRecordStore = dataRecordStore;
         _socketsCommunicator = socketsCommunicator;
+        _messageConverter = messageConverter;
+        _cts = cts;
     }
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await foreach (var item in _channel.ReadAllAsync(cancellationToken))
         {
-            Console.WriteLine(item);
+            var message = _messageConverter.Convert(item);
+            if (message == Message.Empty) continue;
 
-            var savedCount = _dataRecordStore.Save();
-            if (savedCount == 4)
+            switch (message.Type)
             {
-                await ServerTerminate(cancellationToken);
+                case QueryData:
+                    await HandleQueryData(message.Content, cancellationToken); 
+                    break;
             }
+
+            // var savedCount = _dataRecordStore.Save();
+            // if (savedCount == 4)
+            // {
+            await ServerTerminate(cancellationToken);
+            // }
+        }
+    }
+
+    private async Task HandleQueryData(string content, CancellationToken cancellationToken)
+    {
+        DataRecord? body = Deserialize<DataRecord>(content);
+
+        if (body is null)
+        {
+            await _communicator.SendBadRequestAsync(QueryData, cancellationToken);
+            return;
+        }
+
+        string recordId = body.Id;
+            
+        if (!_dataRecordStore.TryGet(recordId, out var dataRecord))
+        {
+            await _communicator.SendEmptyDataAsync($"Id: {recordId}", cancellationToken);
+            return;
+        }
+
+        if (!dataRecord.LockTime.IsExpired(DateTime.Now))
+        {
+            await _communicator.SendDataLockedAsync($"Id: {recordId}", cancellationToken);
+            return;
+        }
+
+        if (_dataRecordStore.TryRemove(dataRecord))
+        {
+            _dataRecordStore.TryCreateNext(_clientId, out var nextId);
+            var recordWithNext = new DataRecordWithNext(dataRecord, nextId);
+            await _communicator.SendQueryResultAsync(recordWithNext, cancellationToken);
+        }
+        else
+        {
+            await _communicator.SendEmptyDataAsync($"Id: {recordId}", cancellationToken);
         }
     }
 
@@ -42,5 +98,10 @@ public class ServerJobProcessor
         await _socketsCommunicator.SendServerTerminateAsync(cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
         await _cts.CancelAsync();
+    }
+
+    private T? Deserialize<T>(string json)
+    {
+        return JsonSerializer.Deserialize<T>(json);
     }
 }

@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 using System.Text;
-using SocketCommunicationLib;
+using System.Text.Json;
 using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp.Communication;
@@ -14,9 +14,15 @@ public class SocketCommunicator
         _socket = socket;
     }
     
-    public async Task SendRecordAsync(string content, CancellationToken cancellationToken)
+    public async Task SendQueryAsync(DataRecord dataRecord, CancellationToken cancellationToken)
     {
-        string message = $"<|TEST|>{content}{ProtocolConstants.Eom}";
+        await SendAsync(dataRecord, ProtocolConstants.QueryData, cancellationToken);
+    }
+    
+    public async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)
+    {
+        var json = JsonSerializer.Serialize(data);
+        string message = $"{prefix}{json}{ProtocolConstants.Eom}";
         var messageBytes = Encoding.UTF8.GetBytes(message);
         await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
     }

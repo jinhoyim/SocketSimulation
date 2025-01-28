@@ -48,7 +48,11 @@ public class Client
             {
                 var communicator = new SocketCommunicator(server);
                 var jobChannel = new ClientJobChannel<string>();
-                var processor = new ClientJobProcessor(jobChannel, communicator, _cts);
+                var processor = new ClientJobProcessor(
+                    jobChannel,
+                    communicator,
+                    new MessageConverter(),
+                    _cts);
                 
                 var messageListener = new SocketListener(
                     server,

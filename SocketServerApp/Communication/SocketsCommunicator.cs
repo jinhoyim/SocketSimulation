@@ -12,14 +12,15 @@ public class SocketsCommunicator
         _clients = clients;
     }
 
+    public bool TryGetClient(string clientId, out SocketCommunicator? client)
+    {
+        return _clients.TryGetValue(clientId, out client);
+    }
+    
     public async Task SendServerTerminateAsync(CancellationToken cancellationToken)
     {
         var tasks = _clients.Values.Select(client =>
-        {
-            var message = $"{ServerTerminated}{Eom}";
-            Console.WriteLine(message);
-            return client.SendStringAsync(message, cancellationToken);
-        });
+            client.SendStringAsync("", ServerTerminated, cancellationToken));
         await Task.WhenAll(tasks);
     }
 }

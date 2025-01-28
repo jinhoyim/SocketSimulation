@@ -22,10 +22,8 @@ namespace SocketServerApp
         
         private readonly Lock _lock = new Lock();
         private readonly ConcurrentDictionary<string, SocketCommunicator> _clients = new();
-        private readonly DataRecordStore _dataRecordStore = new();
+        private readonly DataRecordStore _dataRecordStore = new(10);
         private readonly SocketsCommunicator _socketsCommunicator;
-
-        private int _increment;
 
         private Server(IPAddress ipAddress, int port, CancellationTokenSource cts)
         {
@@ -79,7 +77,14 @@ namespace SocketServerApp
                 var communicator = new SocketCommunicator(client);
                 _clients[clientId] = communicator;
                 var jobChannel = new ServerJobChannel<string>();
-                var processor = new ServerJobProcessor(jobChannel, _cts, _dataRecordStore, _socketsCommunicator);
+                var processor = new ServerJobProcessor(
+                    jobChannel,
+                    clientId,
+                    communicator,
+                    _dataRecordStore,
+                    _socketsCommunicator,
+                    new MessageConverter(),
+                    _cts);
 
                 var messageListener = new SocketListener(
                     client,
@@ -94,8 +99,13 @@ namespace SocketServerApp
                 if (CanInitAndFirstSend())
                 {
                     var initialData = _dataRecordStore.InitialDataRecord();
-                    _dataRecordStore.Save();
+                    _dataRecordStore.Save(initialData);
                     await FirstSendAsync(initialData, cancellationToken);
+                    Console.WriteLine("Initial data recorded.");
+                    lock (_lock)
+                    {
+                        _isStarted = true;
+                    }
                 }
                 await Task.WhenAll(listenTask, processTask);
             }
@@ -130,25 +140,11 @@ namespace SocketServerApp
                 }
             }
         }
-
-        // private DataRecord CreateInitialDataRecord()
-        // {
-        //     var initValue = 1;
-        //     var lockTime = LockTime.From(DateTime.Now.AddSeconds(2));
-        //     string id;
-        //     
-        //     lock (_lock)
-        //     {
-        //         _increment++;
-        //         id = _increment.ToString();
-        //     }
-        //     return new DataRecord(id, lockTime, string.Empty, initValue);
-        // }
         
         private async Task FirstSendAsync(DataRecord record, CancellationToken cancellationToken)
         {
             var tasks = _clients.Values.Select(client =>
-                    client.SendRecordAsync(record, cancellationToken));
+                    client.SendLockTimeAsync(record, cancellationToken));
             await Task.WhenAll(tasks);
         }
 
