@@ -4,7 +4,7 @@ using SocketCommunicationLib.Contract;
 
 namespace SocketServerApp.Store;
 
-public class DataRecordStore
+public class DataStore
 {
     private readonly Lock _lock = new Lock();
     private readonly ConcurrentDictionary<string, DataRecord> _dataCache = new();
@@ -13,7 +13,7 @@ public class DataRecordStore
     private int _saveCount = 0;
     private int _increment = 0;
 
-    public DataRecordStore(int maxSize)
+    public DataStore(int maxSize)
     {
         _maxSize = maxSize;
     }

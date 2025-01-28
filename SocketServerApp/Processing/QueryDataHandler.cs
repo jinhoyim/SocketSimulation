@@ -10,9 +10,9 @@ public class QueryDataHandler
 {
     private readonly string _clientId;
     private readonly SocketCommunicator _communicator;
-    private readonly DataRecordStore _store;
+    private readonly DataStore _store;
 
-    public QueryDataHandler(string clientId, SocketCommunicator communicator, DataRecordStore store)
+    public QueryDataHandler(string clientId, SocketCommunicator communicator, DataStore store)
     {
         _clientId = clientId;
         _communicator = communicator;

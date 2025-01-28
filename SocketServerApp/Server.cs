@@ -22,7 +22,7 @@ namespace SocketServerApp
         
         private readonly Lock _lock = new Lock();
         private readonly ConcurrentDictionary<string, SocketCommunicator> _clients = new();
-        private readonly DataRecordStore _dataRecordStore = new(10);
+        private readonly DataStore _dataStore = new(10);
         private readonly SocketsCommunicator _socketsCommunicator;
 
         private Server(IPAddress ipAddress, int port, CancellationTokenSource cts)
@@ -81,9 +81,9 @@ namespace SocketServerApp
                     jobChannel,
                     clientId,
                     communicator,
-                    _dataRecordStore,
+                    _dataStore,
                     _socketsCommunicator,
-                    new QueryDataHandler(clientId, communicator, _dataRecordStore),
+                    new QueryDataHandler(clientId, communicator, _dataStore),
                     new MessageConverter(),
                     _cts);
 
@@ -99,8 +99,8 @@ namespace SocketServerApp
                 
                 if (CanInitAndFirstSend())
                 {
-                    var initialData = _dataRecordStore.InitialDataRecord();
-                    _dataRecordStore.Save(initialData);
+                    var initialData = _dataStore.InitialDataRecord();
+                    _dataStore.Save(initialData);
                     await FirstSendAsync(initialData, cancellationToken);
                     Console.WriteLine("Initial data recorded.");
                     lock (_lock)

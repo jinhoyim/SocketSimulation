@@ -10,7 +10,7 @@ public class ServerJobProcessor
 {
     private readonly IChannel<string> _channel;
     private readonly CancellationTokenSource _cts;
-    private readonly DataRecordStore _dataRecordStore;
+    private readonly DataStore _dataStore;
     private readonly SocketsCommunicator _socketsCommunicator;
     private readonly MessageConverter _messageConverter;
     private readonly SocketCommunicator _communicator;
@@ -21,7 +21,7 @@ public class ServerJobProcessor
         IChannel<string> channel,
         string clientId,
         SocketCommunicator communicator,
-        DataRecordStore dataRecordStore,
+        DataStore dataStore,
         SocketsCommunicator socketsCommunicator,
         QueryDataHandler queryHandler,
         MessageConverter messageConverter,
@@ -30,7 +30,7 @@ public class ServerJobProcessor
         _channel = channel;
         _clientId = clientId;
         _communicator = communicator;
-        _dataRecordStore = dataRecordStore;
+        _dataStore = dataStore;
         _socketsCommunicator = socketsCommunicator;
         _queryHandler = queryHandler;
         _messageConverter = messageConverter;
