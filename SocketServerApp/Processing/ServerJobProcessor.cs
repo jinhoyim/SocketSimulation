@@ -1,6 +1,5 @@
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
-using SocketServerApp.Communication;
 using SocketServerApp.Store;
 using static SocketCommunicationLib.Contract.ProtocolConstants;
 
@@ -9,11 +8,8 @@ namespace SocketServerApp.Processing;
 public class ServerJobProcessor
 {
     private readonly IChannel<string> _channel;
-    private readonly CancellationTokenSource _cts;
     private readonly DataStore _dataStore;
-    private readonly SocketsCommunicator _socketsCommunicator;
     private readonly MessageConverter _messageConverter;
-    private readonly SocketCommunicator _communicator;
     private readonly string _clientId;
     private readonly QueryDataHandler _queryHandler;
     private readonly ServerTerminator _serverTerminator;
@@ -21,23 +17,17 @@ public class ServerJobProcessor
     public ServerJobProcessor(
         IChannel<string> channel,
         string clientId,
-        SocketCommunicator communicator,
         DataStore dataStore,
-        SocketsCommunicator socketsCommunicator,
         QueryDataHandler queryHandler,
         MessageConverter messageConverter,
-        ServerTerminator serverTerminator,
-        CancellationTokenSource cts)
+        ServerTerminator serverTerminator)
     {
         _channel = channel;
         _clientId = clientId;
-        _communicator = communicator;
         _dataStore = dataStore;
-        _socketsCommunicator = socketsCommunicator;
         _queryHandler = queryHandler;
         _messageConverter = messageConverter;
         _serverTerminator = serverTerminator;
-        _cts = cts;
     }
 
     public async Task ProcessAsync(CancellationToken cancellationToken)

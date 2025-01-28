@@ -20,7 +20,7 @@ namespace SocketServerApp
         private bool _isStarted = false;
         private readonly int _startMinConnections = 5;
         
-        private readonly Lock _lock = new Lock();
+        private readonly Lock _lock = new();
         private readonly ConcurrentDictionary<string, SocketCommunicator> _clients = new();
         
         
@@ -52,7 +52,6 @@ namespace SocketServerApp
                     {
                         await ClientHandleAsync(
                             client,
-                            socketsCommunicator,
                             serverTerminator,
                             dataStore,
                             cancellationToken);
@@ -69,7 +68,6 @@ namespace SocketServerApp
 
         private async Task ClientHandleAsync(
             Socket client,
-            SocketsCommunicator socketsCommunicator,
             ServerTerminator serverTerminator,
             DataStore dataStore,
             CancellationToken cancellationToken)
@@ -92,13 +90,10 @@ namespace SocketServerApp
                 var processor = new ServerJobProcessor(
                     jobChannel,
                     clientId,
-                    communicator,
                     dataStore,
-                    socketsCommunicator,
                     new QueryDataHandler(clientId, communicator, dataStore),
                     new MessageConverter(),
-                    serverTerminator,
-                    _cts);
+                    serverTerminator);
 
                 var messageListener = new SocketListener(
                     client,
