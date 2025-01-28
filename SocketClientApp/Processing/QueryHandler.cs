@@ -2,6 +2,7 @@ using SocketClientApp.Communication;
 using SocketClientApp.Store;
 using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
+using SocketCommunicationLib.Model;
 
 namespace SocketClientApp.Processing;
 

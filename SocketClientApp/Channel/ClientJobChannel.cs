@@ -1,7 +1,7 @@
 using System.Threading.Channels;
 using SocketCommunicationLib.Channel;
 
-namespace SocketClientApp;
+namespace SocketClientApp.Channel;
 
 public class ClientJobChannel<T> : IChannel<T>
 {
@@ -9,7 +9,7 @@ public class ClientJobChannel<T> : IChannel<T>
 
     public ClientJobChannel()
     {
-        _channel = Channel.CreateUnbounded<T>();
+        _channel = System.Threading.Channels.Channel.CreateUnbounded<T>();
     }
     
     public ValueTask WriteAsync(T item, CancellationToken cancellationToken = default)

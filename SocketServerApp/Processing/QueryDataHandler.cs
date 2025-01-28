@@ -1,4 +1,5 @@
 using SocketCommunicationLib.Contract;
+using SocketCommunicationLib.Model;
 using SocketServerApp.Communication;
 using SocketServerApp.Store;
 

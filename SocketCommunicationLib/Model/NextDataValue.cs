@@ -1,3 +1,3 @@
-namespace SocketCommunicationLib.Contract;
+namespace SocketCommunicationLib.Model;
 
 public record NextDataValue(string Id, LockTime LockTime, int Value);

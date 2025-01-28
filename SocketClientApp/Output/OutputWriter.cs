@@ -1,4 +1,4 @@
-using SocketCommunicationLib.Contract;
+using SocketCommunicationLib.Model;
 
 namespace SocketClientApp.Output;
 

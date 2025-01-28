@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using SocketCommunicationLib.Contract;
+using SocketCommunicationLib.Model;
 
 namespace SocketServerApp.Store;
 

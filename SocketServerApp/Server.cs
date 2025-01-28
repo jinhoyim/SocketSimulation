@@ -4,6 +4,8 @@ using System.Net.Sockets;
 using System.Text;
 using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
+using SocketCommunicationLib.Model;
+using SocketServerApp.Channel;
 using SocketServerApp.Communication;
 using SocketServerApp.Processing;
 using SocketServerApp.Store;

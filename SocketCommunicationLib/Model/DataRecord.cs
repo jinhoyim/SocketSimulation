@@ -1,4 +1,4 @@
-namespace SocketCommunicationLib.Contract;
+namespace SocketCommunicationLib.Model;
 
 public record DataRecord(string Id, LockTime LockTime, string CreatedClientId, int Value)
 {

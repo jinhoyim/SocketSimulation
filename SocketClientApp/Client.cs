@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using SocketClientApp.Channel;
 using SocketClientApp.Communication;
 using SocketClientApp.Output;
 using SocketClientApp.Processing;
