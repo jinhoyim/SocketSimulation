@@ -12,6 +12,7 @@ public class ClientJobProcessor
     private readonly MessageConverter _messageConverter;
     private readonly QuerySuccessfulHandler _querySuccessfulHandler;
     private readonly QueryHandler _queryHandler;
+    private readonly ErrorHandler _errorHandler;
 
     public ClientJobProcessor(
         IChannel<string> channel,
@@ -19,6 +20,7 @@ public class ClientJobProcessor
         MessageConverter messageConverter,
         QuerySuccessfulHandler querySuccessfulHandler,
         QueryHandler queryHandler,
+        ErrorHandler errorHandler,
         CancellationTokenSource cts)
     {
         _channel = channel;
@@ -27,6 +29,7 @@ public class ClientJobProcessor
         _messageConverter = messageConverter;
         _querySuccessfulHandler = querySuccessfulHandler;
         _queryHandler = queryHandler;
+        _errorHandler = errorHandler;
     }
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
@@ -35,7 +38,7 @@ public class ClientJobProcessor
         {
             var message = _messageConverter.Convert(request);
             if (message == Message.Empty) continue;
-            
+
             switch (message.Type)
             {
                 case ProtocolConstants.LockTime:
@@ -48,7 +51,8 @@ public class ClientJobProcessor
                     Console.WriteLine($"Error: {ProtocolConstants.ErrorEmptyData}");
                     break;
                 case ProtocolConstants.ErrorDataLocked:
-                    Console.WriteLine($"Error: {ProtocolConstants.ErrorDataLocked}");
+                    _errorHandler.WriteErrorDataLocked(message.Content);
+                    await _queryHandler.RetryQueryAfterLockTimeAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.ErrorBadRequest:
                     Console.WriteLine($"Error: {ProtocolConstants.ErrorBadRequest}");

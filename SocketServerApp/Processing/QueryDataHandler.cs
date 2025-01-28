@@ -1,8 +1,6 @@
-using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
 using SocketServerApp.Communication;
 using SocketServerApp.Store;
-using static SocketCommunicationLib.Contract.ProtocolConstants;
 
 namespace SocketServerApp.Processing;
 
@@ -19,18 +17,8 @@ public class QueryDataHandler
         _store = store;
     }
     
-    public async Task HandleAsync(string content, CancellationToken cancellationToken)
-    {
-        DataRecord? body = JsonUtils.Deserialize<DataRecord>(content);
-
-        if (body is null)
-        {
-            await _communicator.SendBadRequestAsync(QueryData, cancellationToken);
-            return;
-        }
-
-        string recordId = body.Id;
-            
+    public async Task HandleAsync(string recordId, CancellationToken cancellationToken)
+    {    
         if (!_store.TryGet(recordId, out var dataRecord))
         {
             await _communicator.SendEmptyDataAsync($"Id: {recordId}", cancellationToken);
@@ -39,7 +27,8 @@ public class QueryDataHandler
 
         if (!dataRecord.LockTime.IsExpired(DateTime.Now))
         {
-            await _communicator.SendDataLockedAsync($"Id: {recordId}", cancellationToken);
+            var errorData = new ErrorData<string>(recordId, $"Cannot access locked data(Id: {recordId})");
+            await _communicator.SendDataLockedAsync(errorData, cancellationToken);
             return;
         }
 

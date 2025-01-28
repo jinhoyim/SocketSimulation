@@ -19,9 +19,9 @@ public class SocketCommunicator
         await SendStringAsync(content, ProtocolConstants.ErrorEmptyData, cancellationToken);
     }
 
-    public async Task SendDataLockedAsync(string content, CancellationToken cancellationToken)
+    public async Task SendDataLockedAsync<T>(T data, CancellationToken cancellationToken)
     {
-        await SendStringAsync(content, ProtocolConstants.LockTime, cancellationToken);
+        await SendAsync(data, ProtocolConstants.ErrorDataLocked, cancellationToken);
     }
     
     public async Task SendBadRequestAsync(string requestPrefix, CancellationToken cancellationToken)
@@ -39,8 +39,8 @@ public class SocketCommunicator
     {
         await SendAsync(data, ProtocolConstants.DataRecordWithNext, cancellationToken);
     }
-    
-    public async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)
+
+    private async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)
     {
         var json = JsonUtils.Serialize(data);
         string message = $"{prefix}{json}{ProtocolConstants.Eom}";

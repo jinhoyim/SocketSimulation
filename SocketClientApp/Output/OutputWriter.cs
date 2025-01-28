@@ -9,4 +9,9 @@ public class OutputWriter
         var (id, lockTime, createdClientId, value) = record;
         Console.WriteLine($"Success: {successful}, Id: {id}, LockTime: {lockTime}, Created: {createdClientId}, Value: {value}");
     }
+
+    public void WriteError(string message, int failedCount)
+    {
+        Console.WriteLine($"Error: {failedCount}, Message: {message}");
+    }
 }

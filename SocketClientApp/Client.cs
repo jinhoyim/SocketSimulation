@@ -47,7 +47,7 @@ public class Client
             (bool connected, string errorMessage) = await connector.ConnectAsync(cancellationToken);
 
             var store = new DataStore();
-            var logger = new OutputWriter();
+            var writer = new OutputWriter();
             
             if (connected)
             {
@@ -57,8 +57,9 @@ public class Client
                     jobChannel,
                     communicator,
                     new MessageConverter(),
-                    new QuerySuccessfulHandler(communicator, store, logger),
-                    new QueryHandler(communicator),
+                    new QuerySuccessfulHandler(communicator, store, writer),
+                    new QueryHandler(communicator, store),
+                    new ErrorHandler(store, writer),
                     _cts);
                 
                 var messageListener = new SocketListener(

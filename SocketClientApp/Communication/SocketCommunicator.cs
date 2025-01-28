@@ -14,9 +14,9 @@ public class SocketCommunicator
         _socket = socket;
     }
     
-    public async Task SendQueryAsync(DataRecord dataRecord, CancellationToken cancellationToken)
+    public async Task SendQueryAsync(string id, CancellationToken cancellationToken)
     {
-        await SendAsync(dataRecord, ProtocolConstants.QueryData, cancellationToken);
+        await SendStringAsync(id, ProtocolConstants.QueryData, cancellationToken);
     }
 
     public async Task SendNextDataAsync<T>(T data, CancellationToken cancellationToken)
@@ -28,6 +28,13 @@ public class SocketCommunicator
     {
         var json = JsonUtils.Serialize(data);
         string message = $"{prefix}{json}{ProtocolConstants.Eom}";
+        var messageBytes = Encoding.UTF8.GetBytes(message);
+        await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
+    }
+
+    private async Task SendStringAsync(string content, string prefix, CancellationToken cancellationToken)
+    {
+        var message = $"{prefix}{content}{ProtocolConstants.Eom}";
         var messageBytes = Encoding.UTF8.GetBytes(message);
         await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
     }
