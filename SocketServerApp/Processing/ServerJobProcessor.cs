@@ -1,5 +1,6 @@
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
+using SocketCommunicationLib.Model;
 using SocketServerApp.Store;
 using static SocketCommunicationLib.Contract.DataProtocolConstants;
 
@@ -12,6 +13,7 @@ public class ServerJobProcessor
     private readonly MessageConverter _messageConverter;
     private readonly string _clientId;
     private readonly QueryDataHandler _queryHandler;
+    private readonly NextDataHandler _nextDataHandler;
     private readonly ServerTerminator _serverTerminator;
 
     public ServerJobProcessor(
@@ -20,6 +22,7 @@ public class ServerJobProcessor
         DataStore dataStore,
         QueryDataHandler queryHandler,
         MessageConverter messageConverter,
+        NextDataHandler nextDataHandler,
         ServerTerminator serverTerminator)
     {
         _channel = channel;
@@ -27,6 +30,7 @@ public class ServerJobProcessor
         _dataStore = dataStore;
         _queryHandler = queryHandler;
         _messageConverter = messageConverter;
+        _nextDataHandler = nextDataHandler;
         _serverTerminator = serverTerminator;
     }
 
@@ -35,14 +39,15 @@ public class ServerJobProcessor
         await foreach (Message message in _channel.ReadAllAsync(cancellationToken))
         {
             if (message == Message.Empty) continue;
+            var (type, content) = message;
 
-            switch (message.Type)
+            switch (type)
             {
-                case QueryData when message.Content is string recordId:
+                case QueryData when content is string recordId:
                     await _queryHandler.HandleAsync(recordId, cancellationToken); 
                     break;
-                case NextData:
-                    Console.WriteLine($"Next data received: {message}");
+                case NextData when content is NextDataValue nextData:
+                    await _nextDataHandler.SaveNextDataAsync(nextData, cancellationToken);
                     break;
             }
 

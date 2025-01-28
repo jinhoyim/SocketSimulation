@@ -25,6 +25,11 @@ public class DataStore
         return id;
     }
 
+    public void Update(DataRecord record)
+    {
+        _dataCache[record.Id] = record;
+    }
+
     public DataRecord InitialDataRecord()
     {
         var dateTime = DateTime.Now.AddSeconds(2);
@@ -56,20 +61,4 @@ public class DataStore
         _dataCache[nextId] = DataRecord.Empty with { Id = nextId, CreatedClientId = clientId };
         return true;
     }
-    
-    // public void Get(string id)
-    // {
-    //     DataRecord? current;
-    //     lock (_lock)
-    //     {
-    //         if (_dataCache.TryGetValue(id, out current))
-    //         {
-    //             var isExpired = current.LockTime.IsExpired(DateTime.Now);
-    //             if (isExpired)
-    //             {
-    //                 
-    //             }
-    //         }
-    //     }
-    // }
 }

@@ -56,6 +56,7 @@ namespace SocketServerApp
                             client,
                             serverTerminator,
                             dataStore,
+                            socketsCommunicator,
                             cancellationToken);
                         Console.WriteLine("Client Socket closed.");
                     }, cancellationToken);
@@ -72,6 +73,7 @@ namespace SocketServerApp
             Socket client,
             ServerTerminator serverTerminator,
             DataStore dataStore,
+            SocketsCommunicator socketsCommunicator,
             CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
@@ -95,6 +97,7 @@ namespace SocketServerApp
                     dataStore,
                     new QueryDataHandler(clientId, communicator, dataStore),
                     new MessageConverter(),
+                    new NextDataHandler(dataStore, clientId, socketsCommunicator),
                     serverTerminator);
 
                 var messageListener = new SocketListener(

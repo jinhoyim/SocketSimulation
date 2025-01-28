@@ -35,7 +35,10 @@ public class QueryDataHandler
 
         if (_store.TryRemove(dataRecord))
         {
-            _store.TryCreateNext(_clientId, out var nextId);
+            if (!_store.TryCreateNext(_clientId, out var nextId))
+            {
+                Console.WriteLine("DataRecord store is full.");
+            }
             var recordWithNext = new DataRecordWithNext(dataRecord, nextId);
             await _communicator.SendQueryResultAsync(recordWithNext, cancellationToken);
         }
