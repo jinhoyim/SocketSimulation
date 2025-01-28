@@ -10,8 +10,8 @@ public class OutputWriter
         Console.WriteLine($"Success: {successful}, Id: {id}, LockTime: {lockTime}, Created: {createdClientId}, Value: {value}");
     }
 
-    public void WriteError(string message, int failedCount)
+    public void WriteError(string message, int lockingCount, int emptyCount)
     {
-        Console.WriteLine($"Error: {failedCount}, Message: {message}");
+        Console.WriteLine($"Error(Locking: {lockingCount}, Empty: {emptyCount}), Message: {message}, ");
     }
 }

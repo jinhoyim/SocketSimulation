@@ -18,11 +18,27 @@ public class ErrorHandler
 
     public void WriteErrorDataLocked(string content)
     {
-        var failedCount = _store.IncrementLockingFailed();
+        _store.IncrementLockingFailed();
         
         ErrorData<string>? errorData = JsonUtils.Deserialize<ErrorData<string>>(content);
         if (errorData is null) return;
         
-        _writer.WriteError(errorData.Message, failedCount);
+        WriteError(errorData);
+    }
+
+    public void WriteErrorEmptyData(string content)
+    {
+        _store.IncrementEmptyFailed();
+
+        ErrorData<string>? errorData = JsonUtils.Deserialize<ErrorData<string>>(content);
+        if (errorData is null) return;
+        
+        WriteError(errorData);
+    }
+
+    private void WriteError(ErrorData<string> errorData)
+    {
+        var (lockingCount, emptyCount) = _store.GetFailedCounts();
+        _writer.WriteError(errorData.Message, lockingCount, emptyCount);
     }
 }

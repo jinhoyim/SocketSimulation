@@ -48,7 +48,7 @@ public class ClientJobProcessor
                     await _querySuccessfulHandler.SaveAndNextAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.ErrorEmptyData:
-                    Console.WriteLine($"Error: {ProtocolConstants.ErrorEmptyData}");
+                    _errorHandler.WriteErrorEmptyData(message.Content);
                     break;
                 case ProtocolConstants.ErrorDataLocked:
                     _errorHandler.WriteErrorDataLocked(message.Content);

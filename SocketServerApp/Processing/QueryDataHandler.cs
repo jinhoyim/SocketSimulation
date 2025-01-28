@@ -21,7 +21,7 @@ public class QueryDataHandler
     {    
         if (!_store.TryGet(recordId, out var dataRecord))
         {
-            await _communicator.SendEmptyDataAsync($"Id: {recordId}", cancellationToken);
+            await SendEmptyDataAsync(recordId, cancellationToken);
             return;
         }
 
@@ -40,7 +40,13 @@ public class QueryDataHandler
         }
         else
         {
-            await _communicator.SendEmptyDataAsync($"Id: {recordId}", cancellationToken);
+            await SendEmptyDataAsync(recordId, cancellationToken);
         }
+    }
+
+    private async Task SendEmptyDataAsync(string recordId, CancellationToken cancellationToken)
+    {
+        var errorData = new ErrorData<string>(recordId, $"Data is empty(Id: {recordId})");
+        await _communicator.SendEmptyDataAsync(errorData, cancellationToken);
     }
 }

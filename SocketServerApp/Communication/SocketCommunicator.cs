@@ -14,9 +14,9 @@ public class SocketCommunicator
         _socket = socket;
     }
 
-    public async Task SendEmptyDataAsync(string content, CancellationToken cancellationToken)
+    public async Task SendEmptyDataAsync<T>(T data, CancellationToken cancellationToken)
     {
-        await SendStringAsync(content, ProtocolConstants.ErrorEmptyData, cancellationToken);
+        await SendAsync(data, ProtocolConstants.ErrorEmptyData, cancellationToken);
     }
 
     public async Task SendDataLockedAsync<T>(T data, CancellationToken cancellationToken)
