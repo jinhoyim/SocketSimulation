@@ -6,7 +6,7 @@ using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp.Processing;
 
-public class QueryResultHandler
+public class QuerySuccessfulHandler
 {
     private readonly DataStore _store;
     private readonly OutputWriter _writer;
@@ -14,7 +14,7 @@ public class QueryResultHandler
     private readonly int _maxMilliseconds = 2000;
     private readonly SocketCommunicator _communicator;
 
-    public QueryResultHandler(SocketCommunicator communicator, DataStore store, OutputWriter writer)
+    public QuerySuccessfulHandler(SocketCommunicator communicator, DataStore store, OutputWriter writer)
     {
         _random = new Random();
         _communicator = communicator;
@@ -22,7 +22,7 @@ public class QueryResultHandler
         _writer = writer;
     }
 
-    public async Task HandleAsync(string content, CancellationToken cancellationToken)
+    public async Task SaveAndNextAsync(string content, CancellationToken cancellationToken)
     {
         var withNext = JsonUtils.Deserialize<DataRecordWithNext>(content);
         if (withNext is null) return;

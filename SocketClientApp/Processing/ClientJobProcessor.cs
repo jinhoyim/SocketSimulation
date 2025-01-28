@@ -10,23 +10,23 @@ public class ClientJobProcessor
     private readonly SocketCommunicator _communicator;
     private readonly CancellationTokenSource _cts;
     private readonly MessageConverter _messageConverter;
-    private readonly QueryResultHandler _queryResultHandler;
-    private readonly LockTimeHandler _lockTimeHandler;
+    private readonly QuerySuccessfulHandler _querySuccessfulHandler;
+    private readonly QueryHandler _queryHandler;
 
     public ClientJobProcessor(
         IChannel<string> channel,
         SocketCommunicator communicator,
         MessageConverter messageConverter,
-        QueryResultHandler queryResultHandler,
-        LockTimeHandler lockTimeHandler,
+        QuerySuccessfulHandler querySuccessfulHandler,
+        QueryHandler queryHandler,
         CancellationTokenSource cts)
     {
         _channel = channel;
         _communicator = communicator;
         _cts = cts;
         _messageConverter = messageConverter;
-        _queryResultHandler = queryResultHandler;
-        _lockTimeHandler = lockTimeHandler;
+        _querySuccessfulHandler = querySuccessfulHandler;
+        _queryHandler = queryHandler;
     }
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
@@ -39,10 +39,10 @@ public class ClientJobProcessor
             switch (message.Type)
             {
                 case ProtocolConstants.LockTime:
-                    await _lockTimeHandler.HandleLockTimeAsync(message.Content, cancellationToken);
+                    await _queryHandler.QueryAfterLockTimeAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.DataRecordWithNext:
-                    await _queryResultHandler.HandleAsync(message.Content, cancellationToken);
+                    await _querySuccessfulHandler.SaveAndNextAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.ErrorEmptyData:
                     Console.WriteLine($"Error: {ProtocolConstants.ErrorEmptyData}");

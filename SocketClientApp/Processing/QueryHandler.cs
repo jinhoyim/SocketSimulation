@@ -4,16 +4,16 @@ using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp.Processing;
 
-public class LockTimeHandler
+public class QueryHandler
 {
     private readonly SocketCommunicator _communicator;
 
-    public LockTimeHandler(SocketCommunicator communicator)
+    public QueryHandler(SocketCommunicator communicator)
     {
         _communicator = communicator;
     }
 
-    public async Task HandleLockTimeAsync(string content, CancellationToken cancellationToken)
+    public async Task QueryAfterLockTimeAsync(string content, CancellationToken cancellationToken)
     {
         DataRecord? dataRecord = JsonUtils.Deserialize<DataRecord>(content);
         if (dataRecord is not null)
