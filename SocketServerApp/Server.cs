@@ -22,14 +22,12 @@ namespace SocketServerApp
         
         private readonly Lock _lock = new Lock();
         private readonly ConcurrentDictionary<string, SocketCommunicator> _clients = new();
-        private readonly DataStore _dataStore = new(10);
-        private readonly SocketsCommunicator _socketsCommunicator;
-
+        
+        
         private Server(IPAddress ipAddress, int port, CancellationTokenSource cts)
         {
             _ipEndPoint = new IPEndPoint(ipAddress, port);
             _cts = cts;
-            _socketsCommunicator = new SocketsCommunicator(_clients);
         }
 
         internal static Server Create(IPAddress ipAddress, int port, CancellationTokenSource cts)
@@ -41,6 +39,10 @@ namespace SocketServerApp
         {
             using var connectionListener = ServerListener.Create(_ipEndPoint, _lingerOption, _socketConnectionQueue);
             
+            var socketsCommunicator = new SocketsCommunicator(_clients);
+            var serverTerminator = new ServerTerminator(socketsCommunicator, _cts);
+            DataStore dataStore = new(10);
+            
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -48,7 +50,12 @@ namespace SocketServerApp
                     var client = await connectionListener.AcceptAsync(cancellationToken);
                     _ = Task.Run(async () =>
                     {
-                        await ClientHandleAsync(client, cancellationToken);
+                        await ClientHandleAsync(
+                            client,
+                            socketsCommunicator,
+                            serverTerminator,
+                            dataStore,
+                            cancellationToken);
                         Console.WriteLine("Client Socket closed.");
                     }, cancellationToken);
                 }
@@ -60,7 +67,12 @@ namespace SocketServerApp
             Console.WriteLine("Listener socket closed.");
         }
 
-        private async Task ClientHandleAsync(Socket client, CancellationToken cancellationToken)
+        private async Task ClientHandleAsync(
+            Socket client,
+            SocketsCommunicator socketsCommunicator,
+            ServerTerminator serverTerminator,
+            DataStore dataStore,
+            CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
             try
@@ -81,10 +93,11 @@ namespace SocketServerApp
                     jobChannel,
                     clientId,
                     communicator,
-                    _dataStore,
-                    _socketsCommunicator,
-                    new QueryDataHandler(clientId, communicator, _dataStore),
+                    dataStore,
+                    socketsCommunicator,
+                    new QueryDataHandler(clientId, communicator, dataStore),
                     new MessageConverter(),
+                    serverTerminator,
                     _cts);
 
                 var messageListener = new SocketListener(
@@ -99,8 +112,8 @@ namespace SocketServerApp
                 
                 if (CanInitAndFirstSend())
                 {
-                    var initialData = _dataStore.InitialDataRecord();
-                    _dataStore.Save(initialData);
+                    var initialData = dataStore.InitialDataRecord();
+                    dataStore.Save(initialData);
                     await FirstSendAsync(initialData, cancellationToken);
                     Console.WriteLine("Initial data recorded.");
                     lock (_lock)

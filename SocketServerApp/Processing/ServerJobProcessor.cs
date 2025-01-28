@@ -16,6 +16,7 @@ public class ServerJobProcessor
     private readonly SocketCommunicator _communicator;
     private readonly string _clientId;
     private readonly QueryDataHandler _queryHandler;
+    private readonly ServerTerminator _serverTerminator;
 
     public ServerJobProcessor(
         IChannel<string> channel,
@@ -25,6 +26,7 @@ public class ServerJobProcessor
         SocketsCommunicator socketsCommunicator,
         QueryDataHandler queryHandler,
         MessageConverter messageConverter,
+        ServerTerminator serverTerminator,
         CancellationTokenSource cts)
     {
         _channel = channel;
@@ -34,6 +36,7 @@ public class ServerJobProcessor
         _socketsCommunicator = socketsCommunicator;
         _queryHandler = queryHandler;
         _messageConverter = messageConverter;
+        _serverTerminator = serverTerminator;
         _cts = cts;
     }
 
@@ -54,18 +57,12 @@ public class ServerJobProcessor
                     break;
             }
 
-            // var savedCount = _dataRecordStore.Save();
+            // var savedCount = _dataStore.Save();
+            // savedCount++;
             // if (savedCount == 4)
             // {
-            await ServerTerminate(cancellationToken);
+            // await _serverTerminator.ServerTerminate(cancellationToken);
             // }
         }
-    }
-
-    private async Task ServerTerminate(CancellationToken cancellationToken)
-    {
-        // await _socketsCommunicator.SendServerTerminateAsync(cancellationToken);
-        // await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-        // await _cts.CancelAsync();
     }
 }

@@ -36,6 +36,7 @@ public class ClientJobProcessor
     {
         await foreach (var request in _channel.ReadAllAsync(cancellationToken))
         {
+            Console.WriteLine(request);
             var message = _messageConverter.Convert(request);
             if (message == Message.Empty) continue;
 
