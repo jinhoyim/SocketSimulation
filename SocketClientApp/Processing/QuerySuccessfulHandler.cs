@@ -8,7 +8,7 @@ namespace SocketClientApp.Processing;
 
 public class QuerySuccessfulHandler
 {
-    private readonly DataStore _store;
+    private readonly CountStore _countStore;
     private readonly OutputWriter _writer;
     private readonly Random _random;
     private readonly int _maxMilliseconds = 2000;
@@ -16,12 +16,12 @@ public class QuerySuccessfulHandler
 
     public QuerySuccessfulHandler(
         SocketCommunicator communicator,
-        DataStore store,
+        CountStore countStore,
         OutputWriter writer)
     {
         _random = new Random();
         _communicator = communicator;
-        _store = store;
+        _countStore = countStore;
         _writer = writer;
     }
 
@@ -30,7 +30,7 @@ public class QuerySuccessfulHandler
         var withNext = JsonUtils.Deserialize<DataRecordWithNext>(content);
         if (withNext is null) return;
 
-        var successful = _store.IncrementSuccessful();
+        var successful = _countStore.IncrementSuccessful();
 
         _writer.Write(withNext.DataRecord, successful);
 

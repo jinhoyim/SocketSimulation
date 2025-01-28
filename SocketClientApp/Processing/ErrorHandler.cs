@@ -7,20 +7,20 @@ namespace SocketClientApp.Processing;
 
 public class ErrorHandler
 {
-    private readonly DataStore _store;
+    private readonly CountStore _countStore;
     private readonly OutputWriter _writer;
     private readonly LockTimesStore _lockTimesStore;
 
-    public ErrorHandler(DataStore store, OutputWriter writer, LockTimesStore lockTimesStore)
+    public ErrorHandler(CountStore countStore, OutputWriter writer, LockTimesStore lockTimesStore)
     {
-        _store = store;
+        _countStore = countStore;
         _writer = writer;
         _lockTimesStore = lockTimesStore;
     }
 
     public void WriteErrorDataLocked(string content)
     {
-        _store.IncrementLockingFailed();
+        _countStore.IncrementLockingFailed();
         
         ErrorData<string>? errorData = JsonUtils.Deserialize<ErrorData<string>>(content);
         if (errorData is null) return;
@@ -30,7 +30,7 @@ public class ErrorHandler
 
     public void WriteErrorEmptyData(string content)
     {
-        _store.IncrementEmptyFailed();
+        _countStore.IncrementEmptyFailed();
 
         ErrorData<string>? errorData = JsonUtils.Deserialize<ErrorData<string>>(content);
         if (errorData is null) return;
@@ -41,7 +41,7 @@ public class ErrorHandler
 
     private void WriteError(ErrorData<string> errorData)
     {
-        var (lockingCount, emptyCount) = _store.GetFailedCounts();
+        var (lockingCount, emptyCount) = _countStore.GetFailedCounts();
         _writer.WriteError(errorData.Message, lockingCount, emptyCount);
     }
 }

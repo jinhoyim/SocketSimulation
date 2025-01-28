@@ -46,7 +46,7 @@ public class Client
             var connector = new Connector(server, _clientId);
             (bool connected, string errorMessage) = await connector.ConnectAsync(cancellationToken);
 
-            var store = new DataStore();
+            var countStore = new CountStore();
             var lockTimesStore = new LockTimesStore();
             var writer = new OutputWriter();
             
@@ -58,9 +58,9 @@ public class Client
                     jobChannel,
                     communicator,
                     new MessageConverter(),
-                    new QuerySuccessfulHandler(communicator, store, writer),
-                    new QueryHandler(communicator, store, lockTimesStore),
-                    new ErrorHandler(store, writer, lockTimesStore),
+                    new QuerySuccessfulHandler(communicator, countStore, writer),
+                    new QueryHandler(communicator, lockTimesStore),
+                    new ErrorHandler(countStore, writer, lockTimesStore),
                     _cts);
                 
                 var messageListener = new SocketListener(

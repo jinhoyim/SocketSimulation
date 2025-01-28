@@ -1,6 +1,6 @@
 namespace SocketClientApp.Store;
 
-public class DataStore
+public class CountStore
 {
     private int _successfulCount;
     private int _failedLockingCount;
