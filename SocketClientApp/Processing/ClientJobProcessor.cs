@@ -1,6 +1,4 @@
-using System.Text.Json;
 using SocketClientApp.Communication;
-using SocketCommunicationLib;
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
 
@@ -12,12 +10,14 @@ public class ClientJobProcessor
     private readonly SocketCommunicator _communicator;
     private readonly CancellationTokenSource _cts;
     private readonly MessageConverter _messageConverter;
+    private readonly QueryResultHandler _queryResultHandler;
     private readonly LockTimeHandler _lockTimeHandler;
 
     public ClientJobProcessor(
         IChannel<string> channel,
         SocketCommunicator communicator,
         MessageConverter messageConverter,
+        QueryResultHandler queryResultHandler,
         LockTimeHandler lockTimeHandler,
         CancellationTokenSource cts)
     {
@@ -25,6 +25,7 @@ public class ClientJobProcessor
         _communicator = communicator;
         _cts = cts;
         _messageConverter = messageConverter;
+        _queryResultHandler = queryResultHandler;
         _lockTimeHandler = lockTimeHandler;
     }
 
@@ -41,7 +42,7 @@ public class ClientJobProcessor
                     await _lockTimeHandler.HandleLockTimeAsync(message.Content, cancellationToken);
                     break;
                 case ProtocolConstants.DataRecordWithNext:
-                    await HandleQueryResultAsync(message.Content, cancellationToken);
+                    _queryResultHandler.Handle(message.Content);
                     break;
                 case ProtocolConstants.ErrorEmptyData:
                     Console.WriteLine($"Error: {ProtocolConstants.ErrorEmptyData}");
@@ -70,31 +71,5 @@ public class ClientJobProcessor
                 
             }
         }
-    }
-
-    private async Task HandleQueryResultAsync(string content, CancellationToken cancellationToken)
-    {
-        // string content의 타입 정보를 함께 받거나,
-        // 내부에 정보를 포함하여 역직렬화된 결과를 바로 받을 수 있게 바꿀 것
-        // 데이터와 LockTime, 성공 횟수 기록
-        var withNext = Deserialize<DataRecordWithNext>(content);
-        if (withNext is null) return;
-        
-        Console.WriteLine("HandleQueryResultAsync");
-
-        var record = withNext.DataRecord;
-        // save record
-        Console.WriteLine($"Save Record: {record}");
-        
-        // SuccessfulCount ++
-        Console.WriteLine("Increse Successful Count");
-        
-        // 수신한 NextId를 사용하여 2초 이내 랜덤 LockTime, 새로운 데이터를 생성해서 서버에 저장 요청
-        Console.WriteLine($"SendNextData: {withNext.NextId}");
-    }
-
-    private T? Deserialize<T>(string json)
-    {
-        return JsonUtils.Deserialize<T>(json);
     }
 }

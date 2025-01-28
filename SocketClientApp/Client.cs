@@ -2,7 +2,9 @@
 using System.Net.Sockets;
 using System.Text;
 using SocketClientApp.Communication;
+using SocketClientApp.Output;
 using SocketClientApp.Processing;
+using SocketClientApp.Store;
 using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
 
@@ -44,6 +46,9 @@ public class Client
             var connector = new Connector(server, _clientId);
             (bool connected, string errorMessage) = await connector.ConnectAsync(cancellationToken);
 
+            var store = new DataStore();
+            var logger = new OutputWriter();
+            
             if (connected)
             {
                 var communicator = new SocketCommunicator(server);
@@ -52,6 +57,7 @@ public class Client
                     jobChannel,
                     communicator,
                     new MessageConverter(),
+                    new QueryResultHandler(store, logger),
                     new LockTimeHandler(communicator),
                     _cts);
                 
