@@ -9,11 +9,13 @@ public class ErrorHandler
 {
     private readonly DataStore _store;
     private readonly OutputWriter _writer;
+    private readonly LockTimesStore _lockTimesStore;
 
-    public ErrorHandler(DataStore store, OutputWriter writer)
+    public ErrorHandler(DataStore store, OutputWriter writer, LockTimesStore lockTimesStore)
     {
         _store = store;
         _writer = writer;
+        _lockTimesStore = lockTimesStore;
     }
 
     public void WriteErrorDataLocked(string content)
@@ -34,6 +36,7 @@ public class ErrorHandler
         if (errorData is null) return;
         
         WriteError(errorData);
+        _lockTimesStore.TryRemoveLockTime(errorData.Data);
     }
 
     private void WriteError(ErrorData<string> errorData)

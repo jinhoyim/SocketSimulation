@@ -14,7 +14,10 @@ public class QuerySuccessfulHandler
     private readonly int _maxMilliseconds = 2000;
     private readonly SocketCommunicator _communicator;
 
-    public QuerySuccessfulHandler(SocketCommunicator communicator, DataStore store, OutputWriter writer)
+    public QuerySuccessfulHandler(
+        SocketCommunicator communicator,
+        DataStore store,
+        OutputWriter writer)
     {
         _random = new Random();
         _communicator = communicator;
@@ -28,7 +31,7 @@ public class QuerySuccessfulHandler
         if (withNext is null) return;
 
         var successful = _store.IncrementSuccessful();
-        
+
         _writer.Write(withNext.DataRecord, successful);
 
         await SendNextDataAsync(cancellationToken, withNext);

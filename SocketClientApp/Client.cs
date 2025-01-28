@@ -47,6 +47,7 @@ public class Client
             (bool connected, string errorMessage) = await connector.ConnectAsync(cancellationToken);
 
             var store = new DataStore();
+            var lockTimesStore = new LockTimesStore();
             var writer = new OutputWriter();
             
             if (connected)
@@ -58,8 +59,8 @@ public class Client
                     communicator,
                     new MessageConverter(),
                     new QuerySuccessfulHandler(communicator, store, writer),
-                    new QueryHandler(communicator, store),
-                    new ErrorHandler(store, writer),
+                    new QueryHandler(communicator, store, lockTimesStore),
+                    new ErrorHandler(store, writer, lockTimesStore),
                     _cts);
                 
                 var messageListener = new SocketListener(
