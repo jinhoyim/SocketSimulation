@@ -30,8 +30,8 @@ public class MessageConverter
                 
                 return new Message(type, content);
             }
-            default:
-                return Message.Empty;
+            case false:
+                return new Message(DataProtocolConstants.Unknown, message);
         }
     }
 }

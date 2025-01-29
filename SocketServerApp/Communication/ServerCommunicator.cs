@@ -1,5 +1,4 @@
 using System.Net.Sockets;
-using System.Text;
 using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
 using SocketCommunicationLib.Model;
@@ -18,10 +17,18 @@ public class ServerCommunicator(Socket socket) : SocketCommunicator(socket)
         await SendAsync(data, DataProtocolConstants.ErrorDataLocked, cancellationToken);
     }
     
-    public async Task SendBadRequestAsync(string requestPrefix, CancellationToken cancellationToken)
+    public async Task SendBadRequestAsync(string content, CancellationToken cancellationToken)
     {
-        string message = $"Request: {requestPrefix}";
-        await SendStringAsync(message, DataProtocolConstants.ErrorBadRequest, cancellationToken);
+        var errorMessage = $"Bad Request: \"{content}\".";
+        var errorData = new ErrorData(errorMessage);
+        await SendAsync(errorData, DataProtocolConstants.ErrorBadRequest, cancellationToken);
+    }
+
+    public async Task SendUnsupportedAsync(string content, CancellationToken cancellationToken)
+    {
+        var errorMessage = $"Unsupported Request: \"{content}\".";
+        var errorData = new ErrorData(errorMessage);
+        await SendAsync(errorData, DataProtocolConstants.UnsupportedRequest, cancellationToken);
     }
 
     public async Task SendLockTimeAsync(DataRecord data, CancellationToken cancellationToken)

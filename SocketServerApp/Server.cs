@@ -95,6 +95,7 @@ namespace SocketServerApp
                     jobChannel,
                     clientId,
                     dataStore,
+                    communicator,
                     new QueryDataHandler(clientId, communicator, dataStore),
                     new MessageConverter(),
                     new NextDataHandler(dataStore, clientId, socketsCommunicator),

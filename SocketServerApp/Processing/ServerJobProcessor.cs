@@ -1,6 +1,7 @@
 using SocketCommunicationLib.Channel;
 using SocketCommunicationLib.Contract;
 using SocketCommunicationLib.Model;
+using SocketServerApp.Communication;
 using SocketServerApp.Store;
 using static SocketCommunicationLib.Contract.DataProtocolConstants;
 
@@ -12,14 +13,15 @@ public class ServerJobProcessor
     private readonly DataStore _dataStore;
     private readonly MessageConverter _messageConverter;
     private readonly string _clientId;
+    private readonly ServerCommunicator _communicator;
     private readonly QueryDataHandler _queryHandler;
     private readonly NextDataHandler _nextDataHandler;
     private readonly ServerTerminator _serverTerminator;
 
-    public ServerJobProcessor(
-        IChannel<Message> channel,
+    public ServerJobProcessor(IChannel<Message> channel,
         string clientId,
         DataStore dataStore,
+        ServerCommunicator communicator,
         QueryDataHandler queryHandler,
         MessageConverter messageConverter,
         NextDataHandler nextDataHandler,
@@ -28,6 +30,7 @@ public class ServerJobProcessor
         _channel = channel;
         _clientId = clientId;
         _dataStore = dataStore;
+        _communicator = communicator;
         _queryHandler = queryHandler;
         _messageConverter = messageConverter;
         _nextDataHandler = nextDataHandler;
@@ -38,7 +41,6 @@ public class ServerJobProcessor
     {
         await foreach (Message message in _channel.ReadAllAsync(cancellationToken))
         {
-            if (message == Message.Empty) continue;
             var (type, content) = message;
 
             switch (type)
@@ -48,6 +50,12 @@ public class ServerJobProcessor
                     break;
                 case NextData when content is NextDataValue nextData:
                     await _nextDataHandler.SaveNextDataAsync(nextData, cancellationToken);
+                    break;
+                case Unknown:
+                    await _communicator.SendBadRequestAsync(content.ToString() ?? string.Empty, cancellationToken);
+                    break;
+                default:
+                    await _communicator.SendUnsupportedAsync(content.ToString() ?? string.Empty, cancellationToken);
                     break;
             }
 
