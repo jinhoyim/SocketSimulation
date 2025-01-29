@@ -3,7 +3,7 @@
 if (args.Length == 0)
 {
     Console.WriteLine("Please run with clientId");
-    Console.WriteLine("dotnet run <app> <client id>");
+    Console.WriteLine("dotnet <app> <client id>");
     return;
 }
 
@@ -14,7 +14,7 @@ var maxMilliseconds = 2000;
 var processorCount = 1;
 
 // true인 경우 LockTime 대기 시간에 1밀리초를 추가 
-var afterLockTime = true;
+var afterLockTime = false;
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, _) =>
