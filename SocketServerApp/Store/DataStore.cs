@@ -6,7 +6,6 @@ namespace SocketServerApp.Store;
 
 public class DataStore
 {
-    private readonly Lock _lock = new Lock();
     private readonly ConcurrentDictionary<string, DataRecord> _dataCache = new();
     private readonly int _maxSize;
     

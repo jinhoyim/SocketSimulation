@@ -64,8 +64,6 @@ public class Client
                 
                 var processor = new ClientJobProcessor(
                     jobChannel,
-                    communicator,
-                    new MessageConverter(),
                     new QuerySuccessfulHandler(
                         communicator,
                         new NextDataGenerator(_maxMilliseconds),

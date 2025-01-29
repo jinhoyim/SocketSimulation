@@ -11,28 +11,22 @@ public class ServerJobProcessor
 {
     private readonly IChannel<Message> _channel;
     private readonly DataStore _dataStore;
-    private readonly MessageConverter _messageConverter;
-    private readonly string _clientId;
     private readonly ServerCommunicator _communicator;
     private readonly QueryDataHandler _queryHandler;
     private readonly NextDataHandler _nextDataHandler;
     private readonly ServerTerminator _serverTerminator;
 
     public ServerJobProcessor(IChannel<Message> channel,
-        string clientId,
         DataStore dataStore,
         ServerCommunicator communicator,
         QueryDataHandler queryHandler,
-        MessageConverter messageConverter,
         NextDataHandler nextDataHandler,
         ServerTerminator serverTerminator)
     {
         _channel = channel;
-        _clientId = clientId;
         _dataStore = dataStore;
         _communicator = communicator;
         _queryHandler = queryHandler;
-        _messageConverter = messageConverter;
         _nextDataHandler = nextDataHandler;
         _serverTerminator = serverTerminator;
     }

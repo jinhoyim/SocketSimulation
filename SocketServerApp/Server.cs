@@ -115,11 +115,9 @@ namespace SocketServerApp
                 var jobChannel = new ServerJobChannel<Message>();
                 var processor = new ServerJobProcessor(
                     jobChannel,
-                    clientId,
                     dataStore,
                     communicator,
                     new QueryDataHandler(clientId, communicator, dataStore),
-                    new MessageConverter(),
                     new NextDataHandler(dataStore, clientId, communicator, socketsCommunicator),
                     serverTerminator);
 
