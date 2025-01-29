@@ -13,6 +13,9 @@ var serverPort = 12345;
 var maxMilliseconds = 2000;
 var processorCount = 1;
 
+// true인 경우 LockTime 대기 시간에 1밀리초를 추가 
+var afterLockTime = true;
+
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, _) =>
 {
@@ -27,7 +30,8 @@ try
         serverIpAddress,
         serverPort,
         maxMilliseconds,
-        processorCount);
+        processorCount,
+        afterLockTime);
     var client = Client.Create(config, cts);
     await client.StartAsync();
 }

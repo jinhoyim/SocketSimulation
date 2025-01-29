@@ -12,13 +12,21 @@ public class Client
     private readonly int _maxMilliseconds;
     private readonly CancellationTokenSource _cts;
     private readonly int _processorCount;
+    private readonly bool _afterLockTime;
 
-    private Client(string clientId, IPEndPoint ipEndPoint, int maxMilliseconds, int processorCount, CancellationTokenSource cts)
+    private Client(
+        string clientId,
+        IPEndPoint ipEndPoint,
+        int maxMilliseconds,
+        int processorCount,
+        bool afterLockTime,
+        CancellationTokenSource cts)
     {
         _clientId = clientId;
         _ipEndPoint = ipEndPoint;
         _maxMilliseconds = maxMilliseconds;
         _processorCount = processorCount;
+        _afterLockTime = afterLockTime;
         _cts = cts;
     }
     
@@ -29,6 +37,7 @@ public class Client
             config.ServerIpEndPoint,
             config.MaxMilliseconds,
             config.ProcessorCount,
+            config.AfterLockTime,
             cts);
     }
 
@@ -54,7 +63,7 @@ public class Client
                 Console.WriteLine($"Connection failed and application stop. {errorMessage}");
             }
 
-            var worker = new ClientWorker(server, _maxMilliseconds, _cts);
+            var worker = new ClientWorker(server, _maxMilliseconds, _afterLockTime, _cts);
             await worker.RunAsycn(_processorCount, cancellationToken);
         }
         finally

@@ -19,8 +19,9 @@ public class ClientWorker
     private readonly int _maxMilliseconds;
     private readonly CancellationTokenSource _cts;
     private readonly Socket _serverSocket;
+    private readonly bool _afterLockTime;
 
-    public ClientWorker(Socket serverSocket, int maxMilliseconds, CancellationTokenSource cts)
+    public ClientWorker(Socket serverSocket, int maxMilliseconds, bool afterLockTime, CancellationTokenSource cts)
     {
         _serverSocket = serverSocket;
         _maxMilliseconds = maxMilliseconds;
@@ -29,6 +30,7 @@ public class ClientWorker
         _lockTimesStore = new LockTimesStore();
         _countStore = new CountStore();
         _writer = new OutputWriter(_countStore);
+        _afterLockTime = afterLockTime;
     }
 
     public async Task RunAsycn(int processorCount, CancellationToken cancellationToken)
@@ -59,7 +61,7 @@ public class ClientWorker
                 new NextDataGenerator(_maxMilliseconds),
                 _countStore,
                 _writer),
-            new QueryHandler(_communicator, _lockTimesStore),
+            new QueryHandler(_communicator, _lockTimesStore, _afterLockTime),
             new ErrorHandler(_countStore, _writer, _lockTimesStore),
             _cts);
     }

@@ -8,11 +8,13 @@ public class QueryHandler
 {
     private readonly ClientCommunicator _communicator;
     private readonly LockTimesStore _lockTimesStore;
+    private readonly bool _afterLockTime;
 
-    public QueryHandler(ClientCommunicator communicator, LockTimesStore lockTimesStore)
+    public QueryHandler(ClientCommunicator communicator, LockTimesStore lockTimesStore, bool afterLockTime)
     {
         _communicator = communicator;
         _lockTimesStore = lockTimesStore;
+        _afterLockTime = afterLockTime;
     }
 
     public async Task QueryAfterLockTimeAsync(DataRecord dataRecord, CancellationToken cancellationToken)
@@ -34,6 +36,11 @@ public class QueryHandler
     private async Task WaitLockTimeAsync(LockTime lockTime, CancellationToken cancellationToken)
     {
         var delay = lockTime.TimeLeftToExpire(DateTime.Now);
+        if (_afterLockTime)
+        {
+            delay = delay.Add(TimeSpan.FromMilliseconds(1));
+        }
+
         if (delay > TimeSpan.Zero)
         {
             await Task.Delay(delay, cancellationToken);
