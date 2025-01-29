@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using SocketServerApp.Communication;
+using SocketServerApp.Output;
 using SocketServerApp.Processing;
 using SocketServerApp.Store;
 
@@ -57,7 +58,7 @@ namespace SocketServerApp
             using var connectionListener = ServerListener.Create(_ipEndPoint, _lingerOption, _socketConnectionQueue);
             var clients = new AllCilentsCommunicator();
             var serverTerminator = new ServerTerminator(clients, _serverTerminatedDelay, _cts);
-            var dataStore = new DataStore(_endCount);
+            var dataStore = new SaveLoggingDataStore(new DataStore(_endCount), new OutputWriter());
             var startStateStore = new StartStateStore(clients, _startConnectionCount);
 
             while (!cancellationToken.IsCancellationRequested)
@@ -87,7 +88,7 @@ namespace SocketServerApp
         private async Task ClientHandleAsync(
             Socket clientSocket,
             ServerTerminator serverTerminator,
-            DataStore dataStore,
+            IDataStore dataStore,
             AllCilentsCommunicator clients,
             StartStateStore startStateStore,
             CancellationToken cancellationToken)

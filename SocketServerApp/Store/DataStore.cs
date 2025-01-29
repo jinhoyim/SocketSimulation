@@ -4,7 +4,7 @@ using SocketCommunicationLib.Model;
 
 namespace SocketServerApp.Store;
 
-public class DataStore
+public class DataStore : IDataStore
 {
     private readonly ConcurrentDictionary<string, DataRecord> _dataCache = new();
     private readonly int _maxSize;
@@ -56,16 +56,17 @@ public class DataStore
         return false;
     }
 
-    public bool TryCreateNext(string clientId, [MaybeNullWhen(false)] out string nextId)
+    public bool TryCreateNext(string clientId, [MaybeNullWhen(false)] out DataRecord nextRecord)
     {
         if (_increment >= _maxSize)
         {
-            nextId = null;
+            nextRecord = null;
             return false;
         }
         var number = Interlocked.Increment(ref _increment);
-        nextId = number.ToString();
-        _dataCache[nextId] = DataRecord.Create(nextId, clientId);
+        string nextId = number.ToString();
+        nextRecord = DataRecord.Create(nextId, clientId);
+        _dataCache[nextId] = nextRecord;
         return true;
     }
 

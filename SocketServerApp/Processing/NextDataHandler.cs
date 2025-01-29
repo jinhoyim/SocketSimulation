@@ -7,13 +7,13 @@ namespace SocketServerApp.Processing;
 
 public class NextDataHandler
 {
-    private readonly DataStore _store;
+    private readonly IDataStore _store;
     private readonly string _clientId;
     private readonly ClientCommunicator _communicator;
     private readonly AllCilentsCommunicator _multiCommunicator;
 
     public NextDataHandler(
-        DataStore store,
+        IDataStore store,
         string clientId,
         ClientCommunicator communicator,
         AllCilentsCommunicator multiCommunicator)

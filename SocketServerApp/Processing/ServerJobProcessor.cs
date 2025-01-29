@@ -9,14 +9,14 @@ namespace SocketServerApp.Processing;
 
 public class ServerJobProcessor
 {
-    private readonly DataStore _dataStore;
+    private readonly IDataStore _dataStore;
     private readonly ClientCommunicator _communicator;
     private readonly QueryDataHandler _queryHandler;
     private readonly NextDataHandler _nextDataHandler;
     private readonly ServerTerminator _serverTerminator;
 
     public ServerJobProcessor(
-        DataStore dataStore,
+        IDataStore dataStore,
         ClientCommunicator communicator,
         QueryDataHandler queryHandler,
         NextDataHandler nextDataHandler,

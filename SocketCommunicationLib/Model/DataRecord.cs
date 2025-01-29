@@ -59,4 +59,9 @@ public class DataRecord
     {
         return new DataRecord(id, LockTime.Empty, createdClientId, 0);
     }
+
+    public override string ToString()
+    {
+        return $"Id: {Id}, LockTime: {LockTime}, CreatedClientId: {CreatedClientId}, Value: {Value}";
+    }
 }

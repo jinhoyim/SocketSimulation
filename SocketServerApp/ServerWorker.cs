@@ -11,7 +11,7 @@ namespace SocketServerApp;
 
 public class ServerWorker
 {
-    private readonly DataStore _dataStore;
+    private readonly IDataStore _dataStore;
     private readonly ClientCommunicator _client;
     private readonly ServerTerminator _serverTerminator;
     private readonly AllCilentsCommunicator _allClients;
@@ -19,7 +19,7 @@ public class ServerWorker
     private readonly TimeSpan _initLockTime;
 
     public ServerWorker(
-        DataStore dataStore,
+        IDataStore dataStore,
         ClientCommunicator client,
         AllCilentsCommunicator allClients,
         ServerTerminator serverTerminator,

@@ -9,9 +9,9 @@ public class QueryDataHandler
 {
     private readonly string _clientId;
     private readonly ClientCommunicator _communicator;
-    private readonly DataStore _store;
+    private readonly IDataStore _store;
 
-    public QueryDataHandler(string clientId, ClientCommunicator communicator, DataStore store)
+    public QueryDataHandler(string clientId, ClientCommunicator communicator, IDataStore store)
     {
         _clientId = clientId;
         _communicator = communicator;
@@ -35,11 +35,11 @@ public class QueryDataHandler
 
         if (_store.TryRemove(dataRecord))
         {
-            if (!_store.TryCreateNext(_clientId, out var nextId))
+            if (!_store.TryCreateNext(_clientId, out var nextRecord))
             {
                 Console.WriteLine("DataRecord store is full.");
             }
-            var recordWithNext = new DataRecordWithNext(dataRecord, nextId);
+            var recordWithNext = new DataRecordWithNext(dataRecord, nextRecord?.Id);
             await _communicator.SendQueryResultAsync(recordWithNext, cancellationToken);
         }
         else
