@@ -19,25 +19,19 @@ public class ErrorHandler
     public void WriteErrorDataLocked(string errorMessage)
     {
         _countStore.IncrementLockingFailed();
-        WriteErrorWithCount(errorMessage);
+        _writer.WriteError(errorMessage);
     }
 
     public void WriteErrorEmptyData(string errorMessage, string recordId)
     {
         _countStore.IncrementFailed();
-        WriteErrorWithCount(errorMessage);
+        _writer.WriteError(errorMessage);
         _lockTimesStore.TryRemoveLockTime(recordId);
     }
     
     public void WriteError(string errorMessage)
     {
         _countStore.IncrementFailed();
-        WriteErrorWithCount(errorMessage);
-    }
-
-    private void WriteErrorWithCount(string errorMessage)
-    {
-        var (lockingCount, emptyCount) = _countStore.GetFailedCounts();
-        _writer.WriteError(errorMessage, lockingCount, emptyCount);
+        _writer.WriteError(errorMessage);
     }
 }

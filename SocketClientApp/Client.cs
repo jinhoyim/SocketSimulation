@@ -49,7 +49,7 @@ public class Client
 
             var countStore = new CountStore();
             var lockTimesStore = new LockTimesStore();
-            var writer = new OutputWriter();
+            var writer = new OutputWriter(countStore);
             
             if (connected)
             {

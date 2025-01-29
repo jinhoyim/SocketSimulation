@@ -1,17 +1,25 @@
+using SocketClientApp.Store;
 using SocketCommunicationLib.Model;
 
 namespace SocketClientApp.Output;
 
 public class OutputWriter
 {
-    public void Write(DataRecord record, int successful)
+    private readonly CountStore _store;
+
+    public OutputWriter(CountStore store)
+    {
+        _store = store;
+    }
+    
+    public void WriteSuccess(DataRecord record)
     {
         var (id, lockTime, createdClientId, value) = record;
-        Console.WriteLine($"Success: {successful}, Id: {id}, LockTime: {lockTime}, Created: {createdClientId}, Value: {value}");
+        Console.WriteLine($"[{_store}] Success: Id: {id}, LockTime: {lockTime}, Created: {createdClientId}, Value: {value}");
     }
 
-    public void WriteError(string message, int lockingCount, int emptyCount)
+    public void WriteError(string message)
     {
-        Console.WriteLine($"Error(Locking: {lockingCount}, Empty: {emptyCount}), Message: {message}, ");
+        Console.WriteLine($"[{_store}] Error: {message}");
     }
 }

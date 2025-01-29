@@ -26,10 +26,8 @@ public class QuerySuccessfulHandler
 
     public async Task SaveAndNextAsync(DataRecordWithNext withNext, CancellationToken cancellationToken)
     {
-        var successful = _countStore.IncrementSuccessful();
-
-        _writer.Write(withNext.DataRecord, successful);
-
+        _countStore.IncrementSuccessful();
+        _writer.WriteSuccess(withNext.DataRecord);
         await SendNextDataAsync(cancellationToken, withNext);
     }
 

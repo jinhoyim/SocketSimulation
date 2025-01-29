@@ -8,23 +8,23 @@ public class CountStore
     // Retry 횟수가 일반 실패 횟수에 포함되지 않도록 구분한다.
     private int _failedLockingCount;
 
-    public int IncrementSuccessful()
+    public void IncrementSuccessful()
     {
-        return Interlocked.Increment(ref _successfulCount);
+        Interlocked.Increment(ref _successfulCount);
     }
 
-    public int IncrementLockingFailed()
+    public void IncrementLockingFailed()
     {
-        return Interlocked.Increment(ref _failedLockingCount);
+        Interlocked.Increment(ref _failedLockingCount);
     }
 
-    public int IncrementFailed()
+    public void IncrementFailed()
     {
-        return Interlocked.Increment(ref _failedCount);
+        Interlocked.Increment(ref _failedCount);
     }
 
-    public (int lockingCount, int emptyCount) GetFailedCounts()
+    public override string ToString()
     {
-        return (lockingCount: _failedLockingCount, emptyCount: _failedCount);
+        return $"Success: {_successfulCount}, Failed: {_failedCount}, Locking: {_failedLockingCount}";
     }
 }
