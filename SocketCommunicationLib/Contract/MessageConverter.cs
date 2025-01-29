@@ -22,10 +22,18 @@ public class MessageConverter
                 var type = match.Groups[1].Value;
                 var content = match.Groups[2].Value;
 
-                if (DataMessageDeserializers.Deserializers.ContainsKey(type))
+                if (DataMessageDeserializers.Deserializers.TryGetValue(type, out var deserializer))
                 {
-                    var body = DataMessageDeserializers.Deserializers[type].Invoke(content) ?? string.Empty;
-                    return new Message(type, body);
+                    try
+                    {
+                        var body = deserializer.Invoke(content) ?? string.Empty;
+                        return new Message(type, body);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        return new Message(DataProtocolConstants.Unknown, message);
+                    }
                 }
                 
                 return new Message(type, content);
