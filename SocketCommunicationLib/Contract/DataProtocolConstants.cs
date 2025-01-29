@@ -18,6 +18,6 @@ public static class DataProtocolConstants
 
     // 알 수 없는 요청
     public const string ErrorBadRequest = "<|DATA|BADREQUEST|>";
-    public const string UnsupportedRequest = "<|DATA|UNSUPPORTEDREQUEST|>";
+    public const string ErrorUnsupportedRequest = "<|DATA|UNSUPPORTEDREQUEST|>";
     public const string Unknown = "<|DATA|UNKNOWN>";
 }

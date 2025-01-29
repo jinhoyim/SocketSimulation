@@ -19,13 +19,13 @@ public class ServerCommunicator(Socket socket) : SocketCommunicator(socket)
 
     public async Task SendNotFoundDataAsync(string id, CancellationToken cancellationToken)
     {
-        var errorData = new ErrorData<string>(id, $"Could not find record with id '{id}'");
+        var errorData = new ErrorData($"Could not find record with id '{id}'");
         await SendAsync(errorData, DataProtocolConstants.ErrorNotFoundData, cancellationToken);
     }
 
     public async Task SendHasNotModifyPermissionAsync(string id, CancellationToken cancellationToken)
     {
-        var errorData = new ErrorData<string>(id, $"Has not modify permission for record with id '{id}'");
+        var errorData = new ErrorData($"Has not modify permission for record with id '{id}'");
         await SendAsync(errorData, DataProtocolConstants.ErrorNotModifyPermission, cancellationToken);
     }
     
@@ -40,7 +40,7 @@ public class ServerCommunicator(Socket socket) : SocketCommunicator(socket)
     {
         var errorMessage = $"Unsupported Request: \"{content}\".";
         var errorData = new ErrorData(errorMessage);
-        await SendAsync(errorData, DataProtocolConstants.UnsupportedRequest, cancellationToken);
+        await SendAsync(errorData, DataProtocolConstants.ErrorUnsupportedRequest, cancellationToken);
     }
 
     public async Task SendLockTimeAsync(DataRecord data, CancellationToken cancellationToken)
