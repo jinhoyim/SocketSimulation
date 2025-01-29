@@ -16,18 +16,24 @@ public class Client
     private const int LingerTimeSeconds = 10;
     private readonly string _clientId;
     private readonly IPEndPoint _ipEndPoint;
+    private readonly int _maxMilliseconds;
     private readonly CancellationTokenSource _cts;
 
-    private Client(string clientId, IPAddress ipAddress, int port, CancellationTokenSource cts)
+    private Client(string clientId, IPEndPoint ipEndPoint, int maxMilliseconds, CancellationTokenSource cts)
     {
         _clientId = clientId;
-        _ipEndPoint = new IPEndPoint(ipAddress, port);
+        _ipEndPoint = ipEndPoint;
+        _maxMilliseconds = maxMilliseconds;
         _cts = cts;
     }
-
-    internal static Client Create(string clientId, IPAddress ipAddress, int port, CancellationTokenSource cts)
+    
+    public static Client Create(ClientConfig config, CancellationTokenSource cts)
     {
-        return new Client(clientId, ipAddress, port, cts);
+        return new Client(
+            config.ClientId,
+            config.ServerIpEndPoint,
+            config.MaxMilliseconds,
+            cts);
     }
 
     internal async Task StartAsync()
@@ -55,11 +61,16 @@ public class Client
             {
                 var communicator = new ClientCommunicator(server);
                 var jobChannel = new ClientJobChannel<Message>();
+                
                 var processor = new ClientJobProcessor(
                     jobChannel,
                     communicator,
                     new MessageConverter(),
-                    new QuerySuccessfulHandler(communicator, countStore, writer),
+                    new QuerySuccessfulHandler(
+                        communicator,
+                        new NextDataGenerator(_maxMilliseconds),
+                        countStore,
+                        writer),
                     new QueryHandler(communicator, lockTimesStore),
                     new ErrorHandler(countStore, writer, lockTimesStore),
                     _cts);

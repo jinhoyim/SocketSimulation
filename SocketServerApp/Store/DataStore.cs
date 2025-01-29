@@ -30,9 +30,9 @@ public class DataStore
         Interlocked.Increment(ref _saveCount);
     }
 
-    public DataRecord InitialDataRecord()
+    public DataRecord InitialDataRecord(TimeSpan initLockTime)
     {
-        var dateTime = DateTime.Now.AddSeconds(2);
+        var dateTime = DateTime.Now.Add(initLockTime);
         var lockTime = LockTime.From(dateTime);
         var number = Interlocked.Increment(ref _increment);
         var id = number.ToString();

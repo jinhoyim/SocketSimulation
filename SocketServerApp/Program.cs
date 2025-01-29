@@ -1,8 +1,12 @@
 ﻿using SocketServerApp;
-using System.Net;
 
-var serverIpAddress = "127.0.0.1";
-var serverPort = 12345;
+var hostIpAddress = "127.0.0.1";
+var hostPort = 12345;
+var startConnectionCount = 5;
+var endCount = 10;
+var initLockTimeSeconds = 2;
+var socketConnectionQueue = 1000;
+var serverTerminatedDelaySeconds = 5;
 
 using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) =>
@@ -12,17 +16,19 @@ Console.CancelKeyPress += (_, e) =>
     Console.WriteLine("App Stopping...");
 };
 
-if (!IPAddress.TryParse(serverIpAddress, out var ipAddress))
-{
-    Console.WriteLine("Invalid Server IP Address.");
-    return;
-}
-
-var server = Server.Create(ipAddress, serverPort, cts);
 try
 {
+    var config = new ServerConfig(
+        hostIpAddress,
+        hostPort,
+        startConnectionCount,
+        endCount,
+        initLockTimeSeconds,
+        socketConnectionQueue,
+        serverTerminatedDelaySeconds);
+    
+    var server = Server.Create(config, cts);
     await server.StartAsync(cts.Token);
-    Console.WriteLine("App Stopped.");
 }
 catch (OperationCanceledException oce)
 {
@@ -33,4 +39,8 @@ catch (OperationCanceledException oce)
 catch (Exception ex)
 {
     Console.WriteLine($"Application Error: {ex}");
+}
+finally
+{
+    Console.WriteLine("App Stopped.");
 }

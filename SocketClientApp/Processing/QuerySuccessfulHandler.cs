@@ -7,19 +7,19 @@ namespace SocketClientApp.Processing;
 
 public class QuerySuccessfulHandler
 {
+    private readonly ClientCommunicator _communicator;
+    private readonly NextDataGenerator _nextDataGenerator;
     private readonly CountStore _countStore;
     private readonly OutputWriter _writer;
-    private readonly Random _random;
-    private readonly int _maxMilliseconds = 2000;
-    private readonly ClientCommunicator _communicator;
 
     public QuerySuccessfulHandler(
         ClientCommunicator communicator,
+        NextDataGenerator nextDataGenerator,
         CountStore countStore,
         OutputWriter writer)
     {
-        _random = new Random();
         _communicator = communicator;
+        _nextDataGenerator = nextDataGenerator;
         _countStore = countStore;
         _writer = writer;
     }
@@ -28,23 +28,15 @@ public class QuerySuccessfulHandler
     {
         _countStore.IncrementSuccessful();
         _writer.WriteSuccess(withNext.DataRecord);
-        await SendNextDataAsync(cancellationToken, withNext);
+        await  SendNextDataAsync(cancellationToken, withNext);
     }
 
     private async Task SendNextDataAsync(CancellationToken cancellationToken, DataRecordWithNext withNext)
     {
         if (withNext.NextId is not null)
         {
-            var nextData = CreateNewData(withNext.NextId);
+            var nextData = _nextDataGenerator.CreateNewData(withNext.NextId);
             await _communicator.SendNextDataAsync(nextData, cancellationToken);
         }
-    }
-
-    private NextDataValue CreateNewData(string nextId)
-    {
-        var nextMilliseconds = _random.Next(_maxMilliseconds);
-        var nextDateTime = DateTime.Now.AddMilliseconds(nextMilliseconds);
-        LockTime lockTime = LockTime.From(nextDateTime);
-        return new NextDataValue(nextId, lockTime, lockTime.Millisecond);
     }
 }

@@ -15,26 +15,48 @@ namespace SocketServerApp
     public class Server
     {
         private readonly LingerOption _lingerOption = new(true, 10);
-        private readonly int _socketConnectionQueue = 1000;
+        private readonly int _socketConnectionQueue;
+        
         private readonly IPEndPoint _ipEndPoint;
+        private readonly int _startConnectionCount;
+        private readonly int _endCount;
+        private readonly TimeSpan _initLockTime;
+        private readonly TimeSpan _serverTerminatedDelay;
         private readonly CancellationTokenSource _cts;
 
         private bool _isStarted = false;
-        private readonly int _startMinConnections = 5;
         
         private readonly Lock _lock = new();
         private readonly ConcurrentDictionary<string, ServerCommunicator> _clients = new();
-        
-        
-        private Server(IPAddress ipAddress, int port, CancellationTokenSource cts)
+
+        private Server(
+            IPEndPoint ipEndPoint,
+            int startConnectionCount,
+            int endCount,
+            TimeSpan initLockTime,
+            int socketConnectionQueue,
+            TimeSpan serverTerminatedDelay,
+            CancellationTokenSource cts)
         {
-            _ipEndPoint = new IPEndPoint(ipAddress, port);
+            _ipEndPoint = ipEndPoint;
+            _startConnectionCount = startConnectionCount;
+            _endCount = endCount;
+            _initLockTime = initLockTime;
+            _socketConnectionQueue = socketConnectionQueue;
+            _serverTerminatedDelay = serverTerminatedDelay;
             _cts = cts;
         }
 
-        internal static Server Create(IPAddress ipAddress, int port, CancellationTokenSource cts)
+        public static Server Create(ServerConfig config, CancellationTokenSource cts)
         {
-            return new Server(ipAddress, port, cts);
+            return new Server(
+                config.IpEndPoint,
+                config.StartConnectionCount,
+                config.EndCount,
+                config.InitLockTime,
+                config.SocketConnectionQueue,
+                config.ServerTerminatedDelay,
+                cts);
         }
 
         internal async Task StartAsync(CancellationToken cancellationToken)
@@ -42,8 +64,8 @@ namespace SocketServerApp
             using var connectionListener = ServerListener.Create(_ipEndPoint, _lingerOption, _socketConnectionQueue);
             
             var socketsCommunicator = new SocketsCommunicator(_clients);
-            var serverTerminator = new ServerTerminator(socketsCommunicator, _cts);
-            DataStore dataStore = new(10);
+            var serverTerminator = new ServerTerminator(socketsCommunicator, _serverTerminatedDelay, _cts);
+            DataStore dataStore = new(_endCount);
             
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -113,7 +135,7 @@ namespace SocketServerApp
                 
                 if (CanInitAndFirstSend())
                 {
-                    var initialData = dataStore.InitialDataRecord();
+                    var initialData = dataStore.InitialDataRecord(_initLockTime);
                     await FirstSendAsync(initialData, cancellationToken);
                     Console.WriteLine("Initial data recorded.");
                     lock (_lock)
@@ -125,7 +147,9 @@ namespace SocketServerApp
             }
             catch (OperationCanceledException)
             {
-                Console.WriteLine($"Operation cancelled. ClientId: {clientId} socket closed.");
+                #if DEBUG
+                Console.WriteLine("Client Socket Operation cancelled.");
+                #endif
             }
             catch (SocketException se)
             {
@@ -137,6 +161,7 @@ namespace SocketServerApp
             }
             finally
             {
+                Console.WriteLine($"ClientId: {clientId} is closed.");
                 if (client.Connected)
                 {
                     client.Shutdown(SocketShutdown.Both);
@@ -167,7 +192,7 @@ namespace SocketServerApp
             if (_isStarted) return false;
             lock (_lock)
             {
-                return !_isStarted && _clients.Count >= _startMinConnections;
+                return !_isStarted && _clients.Count >= _startConnectionCount;
             } 
         }
     }
