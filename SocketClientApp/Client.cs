@@ -64,7 +64,7 @@ public class Client
             }
 
             var worker = new ClientWorker(server, _maxMilliseconds, _afterLockTime, _cts);
-            await worker.RunAsycn(_processorCount, cancellationToken);
+            await worker.RunAsync(_processorCount, cancellationToken);
         }
         finally
         {

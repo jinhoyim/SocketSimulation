@@ -5,8 +5,10 @@ using SocketCommunicationLib.Model;
 
 namespace SocketServerApp.Communication;
 
-public class ClientCommunicator(Socket socket) : SocketCommunicator(socket)
+public class ClientCommunicator(string clientId, Socket socket) : SocketCommunicator(socket)
 {
+    public string ClientId => clientId;
+    
     public async Task SendEmptyDataAsync(ErrorData<string> data, CancellationToken cancellationToken)
     {
         await SendAsync(data, DataProtocolConstants.ErrorEmptyData, cancellationToken);

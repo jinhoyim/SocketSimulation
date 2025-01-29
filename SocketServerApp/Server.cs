@@ -55,11 +55,9 @@ namespace SocketServerApp
         internal async Task StartAsync(CancellationToken cancellationToken)
         {
             using var connectionListener = ServerListener.Create(_ipEndPoint, _lingerOption, _socketConnectionQueue);
-
             var clients = new AllCilentsCommunicator();
-            
             var serverTerminator = new ServerTerminator(clients, _serverTerminatedDelay, _cts);
-            DataStore dataStore = new(_endCount);
+            var dataStore = new DataStore(_endCount);
             var startStateStore = new StartStateStore(clients, _startConnectionCount);
 
             while (!cancellationToken.IsCancellationRequested)
@@ -76,7 +74,6 @@ namespace SocketServerApp
                             clients,
                             startStateStore,
                             cancellationToken);
-                        Console.WriteLine("Client Socket closed.");
                     }, cancellationToken);
                 }
                 catch (InvalidOperationException invalidOperationException)
@@ -107,16 +104,14 @@ namespace SocketServerApp
                     return;
                 }
 
-                var communicator = new ClientCommunicator(clientSocket);
+                var communicator = new ClientCommunicator(clientId, clientSocket);
                 clients.Add(clientId, communicator);
                 
                 var worker = new ServerWorker(
-                    clientId,
                     dataStore,
                     communicator,
                     clients,
                     serverTerminator,
-                    clientSocket,
                     startStateStore,
                     _initLockTime
                 );

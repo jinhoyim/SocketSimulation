@@ -6,11 +6,13 @@ namespace SocketCommunicationLib;
 
 public class SocketCommunicator
 {
-    private readonly Socket Socket;
+    private readonly Socket _socket;
+    
+    public Socket Socket => _socket;
 
     protected SocketCommunicator(Socket socket)
     {
-        Socket = socket;
+        _socket = socket;
     }
     
     public async Task SendAsync<T>(T data, string prefix, CancellationToken cancellationToken)
@@ -18,13 +20,13 @@ public class SocketCommunicator
         var json = JsonUtils.Serialize(data);
         string message = $"{prefix}{json}{ProtocolConstants.Eom}";
         var messageBytes = Encoding.UTF8.GetBytes(message);
-        await Socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
+        await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
     }
     
     public async Task SendStringAsync(string content, string prefix, CancellationToken cancellationToken)
     {
         var message = $"{prefix}{content}{ProtocolConstants.Eom}";
         var messageBytes = Encoding.UTF8.GetBytes(message);
-        await Socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
+        await _socket.SendAsync(messageBytes, SocketFlags.None, cancellationToken);
     }
 }

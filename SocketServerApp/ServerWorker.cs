@@ -1,4 +1,3 @@
-using System.Net.Sockets;
 using System.Text;
 using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
@@ -12,37 +11,28 @@ namespace SocketServerApp;
 
 public class ServerWorker
 {
-    private readonly QueryDataHandler _queryDataHandler;
-    private readonly NextDataHandler _nextDataHandler;
     private readonly DataStore _dataStore;
-    private readonly ClientCommunicator _communicator;
+    private readonly ClientCommunicator _client;
     private readonly ServerTerminator _serverTerminator;
-    private readonly Socket _clientSocket;
-    private readonly AllCilentsCommunicator _allAllCilentsCommunicator;
+    private readonly AllCilentsCommunicator _allClients;
     private readonly StartStateStore _startStateStore;
     private readonly TimeSpan _initLockTime;
 
     public ServerWorker(
-        string clientId,
         DataStore dataStore,
-        ClientCommunicator communicator,
-        AllCilentsCommunicator allAllCilentsCommunicator,
+        ClientCommunicator client,
+        AllCilentsCommunicator allClients,
         ServerTerminator serverTerminator,
-        Socket clientSocket,
         StartStateStore startStateStore,
         TimeSpan initLockTime
         )
     {
         _dataStore = dataStore;
-        _communicator = communicator;
+        _client = client;
         _serverTerminator = serverTerminator;
-        _clientSocket = clientSocket;
-        _allAllCilentsCommunicator = allAllCilentsCommunicator;
+        _allClients = allClients;
         _startStateStore = startStateStore;
         _initLockTime = initLockTime;
-        
-        _queryDataHandler = new QueryDataHandler(clientId, communicator, dataStore);
-        _nextDataHandler = new NextDataHandler(dataStore, clientId, communicator, allAllCilentsCommunicator);
     }
 
     public async Task RunAsync(int processorCount, CancellationToken cancellationToken)
@@ -50,20 +40,12 @@ public class ServerWorker
         var jobChannel = new ServerJobChannel<Message>();
         var socketListener = CreateSocketListener();
         
-        var tasks = new List<Task>();
-        var processors = new List<ServerJobProcessor>();
-
-        for (int i = 0; i < processorCount; i++)
-        {
-            var processor = CreateJobProcessor();
-            processors.Add(processor);
-            tasks.Add(processor.ProcessAsync(jobChannel, cancellationToken));
-        }
-        var listenTask = socketListener.ListenAsync(jobChannel, cancellationToken);
-        tasks.Add(listenTask);
+        var tasks = Enumerable.Range(0, processorCount)
+            .Select(t => CreateJobProcessor().ProcessAsync(jobChannel, cancellationToken))
+            .ToList();
+        tasks.Add(socketListener.ListenAsync(jobChannel, cancellationToken));
         
         await CheckStart(cancellationToken);
-        
         await Task.WhenAll(tasks);
     }
 
@@ -79,13 +61,13 @@ public class ServerWorker
 
     private async Task FirstSendLockTimeAsync(DataRecord record, CancellationToken cancellationToken)
     {
-        await _allAllCilentsCommunicator.SendNextLockTimeAsync(string.Empty, record, cancellationToken);
+        await _allClients.SendNextLockTimeAsync(string.Empty, record, cancellationToken);
     }
 
     private SocketListener CreateSocketListener()
     {
         return new SocketListener(
-            _clientSocket,
+            _client.Socket,
             new SocketMessageStringExtractor(
                 ProtocolConstants.Eom,
                 Encoding.UTF8));
@@ -95,9 +77,9 @@ public class ServerWorker
     {
         return new ServerJobProcessor(
             _dataStore,
-            _communicator,
-            _queryDataHandler,
-            _nextDataHandler,
+            _client,
+            new QueryDataHandler(_client.ClientId, _client, _dataStore),
+            new NextDataHandler(_dataStore, _client.ClientId, _client, _allClients),
             _serverTerminator);
     }
 }

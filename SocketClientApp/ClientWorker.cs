@@ -18,12 +18,10 @@ public class ClientWorker
     private readonly OutputWriter _writer;
     private readonly int _maxMilliseconds;
     private readonly CancellationTokenSource _cts;
-    private readonly Socket _serverSocket;
     private readonly bool _afterLockTime;
 
     public ClientWorker(Socket serverSocket, int maxMilliseconds, bool afterLockTime, CancellationTokenSource cts)
     {
-        _serverSocket = serverSocket;
         _maxMilliseconds = maxMilliseconds;
         _cts = cts;
         _communicator = new ClientCommunicator(serverSocket);
@@ -33,22 +31,15 @@ public class ClientWorker
         _afterLockTime = afterLockTime;
     }
 
-    public async Task RunAsycn(int processorCount, CancellationToken cancellationToken)
+    public async Task RunAsync(int processorCount, CancellationToken cancellationToken)
     {
         var jobChannel = new ClientJobChannel<Message>();        
         var messageListener = CreateSocketListener();
 
-        var tasks = new List<Task>();
-        var processors = new List<ClientJobProcessor>();
-        
-        for (int i = 1; i <= processorCount; i++)
-        {
-            var processor = CreateJobProcessor();
-            processors.Add(processor);
-            tasks.Add(processor.ProcessAsync(jobChannel, cancellationToken));
-        }
-        var listenTask = messageListener.ListenAsync(jobChannel, cancellationToken);
-        tasks.Add(listenTask);
+        var tasks = Enumerable.Range(0, processorCount)
+            .Select(t => CreateJobProcessor().ProcessAsync(jobChannel, cancellationToken))
+            .ToList();
+        tasks.Add(messageListener.ListenAsync(jobChannel, cancellationToken));
         
         await Task.WhenAll(tasks);
     }
@@ -69,7 +60,7 @@ public class ClientWorker
     private SocketListener CreateSocketListener()
     {
         return new SocketListener(
-            _serverSocket,
+            _communicator.Socket,
             new SocketMessageStringExtractor(
                 ProtocolConstants.Eom,
                 Encoding.UTF8)
