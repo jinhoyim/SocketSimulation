@@ -8,6 +8,7 @@ public class ServerConfig
     public TimeSpan InitLockTime { get; }
     public int SocketConnectionQueue { get; }
     public TimeSpan ServerTerminatedDelay { get; }
+    public int ProcessorCount { get; }
 
     public ServerConfig(
         string ipAddress,
@@ -16,7 +17,8 @@ public class ServerConfig
         int endCount,
         int initLockTimeSeconds,
         int socketConnectionQueue,
-        int serverTerminatedDelaySeconds)
+        int serverTerminatedDelaySeconds,
+        int processorCount)
     {
         if (!IPAddress.TryParse(ipAddress, out var ip))
         {
@@ -29,5 +31,6 @@ public class ServerConfig
         InitLockTime = TimeSpan.FromSeconds(initLockTimeSeconds);
         SocketConnectionQueue = socketConnectionQueue;
         ServerTerminatedDelay = TimeSpan.FromSeconds(serverTerminatedDelaySeconds);
+        ProcessorCount = processorCount;
     }
 }

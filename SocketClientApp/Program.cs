@@ -11,6 +11,7 @@ var clientId = args[0];
 var serverIpAddress = "127.0.0.1";
 var serverPort = 12345;
 var maxMilliseconds = 2000;
+var processorCount = 1;
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, _) =>
@@ -25,9 +26,14 @@ try
         clientId,
         serverIpAddress,
         serverPort,
-        maxMilliseconds);
+        maxMilliseconds,
+        processorCount);
     var client = Client.Create(config, cts);
     await client.StartAsync();
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("Operation cancelled.");
 }
 catch (Exception ex)
 {

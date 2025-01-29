@@ -9,21 +9,19 @@ namespace SocketServerApp.Processing;
 
 public class ServerJobProcessor
 {
-    private readonly IChannel<Message> _channel;
     private readonly DataStore _dataStore;
-    private readonly ServerCommunicator _communicator;
+    private readonly ClientCommunicator _communicator;
     private readonly QueryDataHandler _queryHandler;
     private readonly NextDataHandler _nextDataHandler;
     private readonly ServerTerminator _serverTerminator;
 
-    public ServerJobProcessor(IChannel<Message> channel,
+    public ServerJobProcessor(
         DataStore dataStore,
-        ServerCommunicator communicator,
+        ClientCommunicator communicator,
         QueryDataHandler queryHandler,
         NextDataHandler nextDataHandler,
         ServerTerminator serverTerminator)
     {
-        _channel = channel;
         _dataStore = dataStore;
         _communicator = communicator;
         _queryHandler = queryHandler;
@@ -31,9 +29,9 @@ public class ServerJobProcessor
         _serverTerminator = serverTerminator;
     }
 
-    public async Task ProcessAsync(CancellationToken cancellationToken)
+    public async Task ProcessAsync(IChannel<Message> channel, CancellationToken cancellationToken)
     {
-        await foreach (Message message in _channel.ReadAllAsync(cancellationToken))
+        await foreach (Message message in channel.ReadAllAsync(cancellationToken))
         {
             var (type, content) = message;
 

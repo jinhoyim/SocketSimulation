@@ -1,13 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using SocketClientApp.Channel;
 using SocketClientApp.Communication;
-using SocketClientApp.Output;
-using SocketClientApp.Processing;
-using SocketClientApp.Store;
-using SocketCommunicationLib;
-using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp;
 
@@ -18,12 +11,14 @@ public class Client
     private readonly IPEndPoint _ipEndPoint;
     private readonly int _maxMilliseconds;
     private readonly CancellationTokenSource _cts;
+    private readonly int _processorCount;
 
-    private Client(string clientId, IPEndPoint ipEndPoint, int maxMilliseconds, CancellationTokenSource cts)
+    private Client(string clientId, IPEndPoint ipEndPoint, int maxMilliseconds, int processorCount, CancellationTokenSource cts)
     {
         _clientId = clientId;
         _ipEndPoint = ipEndPoint;
         _maxMilliseconds = maxMilliseconds;
+        _processorCount = processorCount;
         _cts = cts;
     }
     
@@ -33,6 +28,7 @@ public class Client
             config.ClientId,
             config.ServerIpEndPoint,
             config.MaxMilliseconds,
+            config.ProcessorCount,
             cts);
     }
 
@@ -53,54 +49,13 @@ public class Client
             var connector = new Connector(server, _clientId);
             (bool connected, string errorMessage) = await connector.ConnectAsync(cancellationToken);
 
-            var countStore = new CountStore();
-            var lockTimesStore = new LockTimesStore();
-            var writer = new OutputWriter(countStore);
-            
-            if (connected)
-            {
-                var communicator = new ClientCommunicator(server);
-                var jobChannel = new ClientJobChannel<Message>();
-                
-                var processor = new ClientJobProcessor(
-                    jobChannel,
-                    new QuerySuccessfulHandler(
-                        communicator,
-                        new NextDataGenerator(_maxMilliseconds),
-                        countStore,
-                        writer),
-                    new QueryHandler(communicator, lockTimesStore),
-                    new ErrorHandler(countStore, writer, lockTimesStore),
-                    _cts);
-                
-                var messageListener = new SocketListener(
-                    server,
-                    new SocketMessageStringExtractor(
-                        ProtocolConstants.Eom,
-                        Encoding.UTF8),
-                    jobChannel
-                );
-
-                try
-                {
-                    var processTask = processor.ProcessAsync(cancellationToken);
-                    var listenTask = messageListener.ListenAsync(cancellationToken);
-                    await Task.WhenAll(processTask, listenTask);
-                }
-                catch (OperationCanceledException)
-                {
-                    Console.WriteLine("Operation cancelled.");
-                }
-                Console.WriteLine("End handle.");
-            }
-            else
+            if (!connected)
             {
                 Console.WriteLine($"Connection failed and application stop. {errorMessage}");
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"System Error : {ex}");
+
+            var worker = new ClientWorker(server, _maxMilliseconds, _cts);
+            await worker.RunAsycn(_processorCount, cancellationToken);
         }
         finally
         {

@@ -4,13 +4,22 @@ using static SocketCommunicationLib.Contract.ProtocolConstants;
 
 namespace SocketServerApp.Communication;
 
-public class SocketsCommunicator
+public class AllCilentsCommunicator
 {
-    private readonly ConcurrentDictionary<string,ServerCommunicator> _clients;
+    private readonly ConcurrentDictionary<string, ClientCommunicator> _clients = new();
 
-    public SocketsCommunicator(ConcurrentDictionary<string, ServerCommunicator> clients)
+    public int Count => _clients.Count;
+    public ICollection<string> ClientIds => _clients.Keys;
+    public bool IsEmpty => _clients.IsEmpty;
+    
+    public void Add(string clientId, ClientCommunicator communicator)
     {
-        _clients = clients;
+        _clients[clientId] = communicator;
+    }
+
+    public void TryRemove(string clientId)
+    {
+        _clients.TryRemove(clientId, out _);
     }
 
     public async Task SendServerTerminateAsync(CancellationToken cancellationToken)

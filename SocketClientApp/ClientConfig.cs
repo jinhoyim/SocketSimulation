@@ -5,12 +5,14 @@ public class ClientConfig
     public string ClientId { get; }
     public IPEndPoint ServerIpEndPoint { get; }
     public int MaxMilliseconds { get; }
+    public int ProcessorCount { get; }
 
     public ClientConfig(
         string clientId,
         string serverIpAddress,
         int serverPort,
-        int maxMilliseconds)
+        int maxMilliseconds,
+        int processorCount)
     {
         if (!IPAddress.TryParse(serverIpAddress, out var ip))
         {
@@ -20,5 +22,6 @@ public class ClientConfig
         ClientId = clientId;
         ServerIpEndPoint = new IPEndPoint(ip, serverPort);
         MaxMilliseconds = maxMilliseconds;
+        ProcessorCount = processorCount;
     }
 }

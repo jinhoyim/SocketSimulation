@@ -9,14 +9,14 @@ public class NextDataHandler
 {
     private readonly DataStore _store;
     private readonly string _clientId;
-    private readonly ServerCommunicator _communicator;
-    private readonly SocketsCommunicator _multiCommunicator;
+    private readonly ClientCommunicator _communicator;
+    private readonly AllCilentsCommunicator _multiCommunicator;
 
     public NextDataHandler(
         DataStore store,
         string clientId,
-        ServerCommunicator communicator,
-        SocketsCommunicator multiCommunicator)
+        ClientCommunicator communicator,
+        AllCilentsCommunicator multiCommunicator)
     {
         _store = store;
         _clientId = clientId;

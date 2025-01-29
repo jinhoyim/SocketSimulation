@@ -7,29 +7,26 @@ namespace SocketClientApp.Processing;
 
 public class ClientJobProcessor
 {
-    private readonly IChannel<Message> _channel;
     private readonly CancellationTokenSource _cts;
     private readonly QuerySuccessfulHandler _querySuccessfulHandler;
     private readonly QueryHandler _queryHandler;
     private readonly ErrorHandler _errorHandler;
 
     public ClientJobProcessor(
-        IChannel<Message> channel,
         QuerySuccessfulHandler querySuccessfulHandler,
         QueryHandler queryHandler,
         ErrorHandler errorHandler,
         CancellationTokenSource cts)
     {
-        _channel = channel;
         _cts = cts;
         _querySuccessfulHandler = querySuccessfulHandler;
         _queryHandler = queryHandler;
         _errorHandler = errorHandler;
     }
 
-    public async Task ProcessAsync(CancellationToken cancellationToken)
+    public async Task ProcessAsync(IChannel<Message> inputChannel, CancellationToken cancellationToken)
     {
-        await foreach (Message message in _channel.ReadAllAsync(cancellationToken))
+        await foreach (Message message in inputChannel.ReadAllAsync(cancellationToken))
         {
             var (type, content) = message;
 

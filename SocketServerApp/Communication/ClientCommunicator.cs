@@ -5,7 +5,7 @@ using SocketCommunicationLib.Model;
 
 namespace SocketServerApp.Communication;
 
-public class ServerCommunicator(Socket socket) : SocketCommunicator(socket)
+public class ClientCommunicator(Socket socket) : SocketCommunicator(socket)
 {
     public async Task SendEmptyDataAsync(ErrorData<string> data, CancellationToken cancellationToken)
     {

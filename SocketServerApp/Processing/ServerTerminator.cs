@@ -4,14 +4,14 @@ namespace SocketServerApp.Processing;
 
 public class ServerTerminator
 {
-    private readonly SocketsCommunicator _communicator;
+    private readonly AllCilentsCommunicator _communicator;
     private readonly TimeSpan _serverTerminatedDelay;
     private readonly CancellationTokenSource _cts;
     private bool _terminated = false;
     private readonly Lock _terminationLock = new();
 
     public ServerTerminator(
-        SocketsCommunicator communicator,
+        AllCilentsCommunicator communicator,
         TimeSpan serverTerminatedDelay,
         CancellationTokenSource cts)
     {

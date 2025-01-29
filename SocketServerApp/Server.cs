@@ -1,11 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using SocketCommunicationLib;
-using SocketCommunicationLib.Contract;
-using SocketCommunicationLib.Model;
-using SocketServerApp.Channel;
 using SocketServerApp.Communication;
 using SocketServerApp.Processing;
 using SocketServerApp.Store;
@@ -23,11 +17,7 @@ namespace SocketServerApp
         private readonly TimeSpan _initLockTime;
         private readonly TimeSpan _serverTerminatedDelay;
         private readonly CancellationTokenSource _cts;
-
-        private bool _isStarted = false;
-        
-        private readonly Lock _lock = new();
-        private readonly ConcurrentDictionary<string, ServerCommunicator> _clients = new();
+        private readonly int _processorCount;
 
         private Server(
             IPEndPoint ipEndPoint,
@@ -36,6 +26,7 @@ namespace SocketServerApp
             TimeSpan initLockTime,
             int socketConnectionQueue,
             TimeSpan serverTerminatedDelay,
+            int processorCount,
             CancellationTokenSource cts)
         {
             _ipEndPoint = ipEndPoint;
@@ -44,6 +35,7 @@ namespace SocketServerApp
             _initLockTime = initLockTime;
             _socketConnectionQueue = socketConnectionQueue;
             _serverTerminatedDelay = serverTerminatedDelay;
+            _processorCount = processorCount;
             _cts = cts;
         }
 
@@ -56,17 +48,20 @@ namespace SocketServerApp
                 config.InitLockTime,
                 config.SocketConnectionQueue,
                 config.ServerTerminatedDelay,
+                config.ProcessorCount,
                 cts);
         }
 
         internal async Task StartAsync(CancellationToken cancellationToken)
         {
             using var connectionListener = ServerListener.Create(_ipEndPoint, _lingerOption, _socketConnectionQueue);
+
+            var clients = new AllCilentsCommunicator();
             
-            var socketsCommunicator = new SocketsCommunicator(_clients);
-            var serverTerminator = new ServerTerminator(socketsCommunicator, _serverTerminatedDelay, _cts);
+            var serverTerminator = new ServerTerminator(clients, _serverTerminatedDelay, _cts);
             DataStore dataStore = new(_endCount);
-            
+            var startStateStore = new StartStateStore(clients, _startConnectionCount);
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -78,7 +73,8 @@ namespace SocketServerApp
                             client,
                             serverTerminator,
                             dataStore,
-                            socketsCommunicator,
+                            clients,
+                            startStateStore,
                             cancellationToken);
                         Console.WriteLine("Client Socket closed.");
                     }, cancellationToken);
@@ -92,16 +88,17 @@ namespace SocketServerApp
         }
 
         private async Task ClientHandleAsync(
-            Socket client,
+            Socket clientSocket,
             ServerTerminator serverTerminator,
             DataStore dataStore,
-            SocketsCommunicator socketsCommunicator,
+            AllCilentsCommunicator clients,
+            StartStateStore startStateStore,
             CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
             try
             {
-                var identifier = new ClientIdentifier(client, _clients.Keys);
+                var identifier = new ClientIdentifier(clientSocket, clients.ClientIds);
                 await identifier.IdentifyClientAsync(cancellationToken);
                 clientId = identifier.ClientId;
 
@@ -110,38 +107,20 @@ namespace SocketServerApp
                     return;
                 }
 
-                var communicator = new ServerCommunicator(client);
-                _clients[clientId] = communicator;
-                var jobChannel = new ServerJobChannel<Message>();
-                var processor = new ServerJobProcessor(
-                    jobChannel,
+                var communicator = new ClientCommunicator(clientSocket);
+                clients.Add(clientId, communicator);
+                
+                var worker = new ServerWorker(
+                    clientId,
                     dataStore,
                     communicator,
-                    new QueryDataHandler(clientId, communicator, dataStore),
-                    new NextDataHandler(dataStore, clientId, communicator, socketsCommunicator),
-                    serverTerminator);
-
-                var messageListener = new SocketListener(
-                    client,
-                    new SocketMessageStringExtractor(
-                        ProtocolConstants.Eom,
-                        Encoding.UTF8),
-                    jobChannel);
-
-                var processTask = processor.ProcessAsync(cancellationToken);
-                var listenTask = messageListener.ListenAsync(cancellationToken);
-                
-                if (CanInitAndFirstSend())
-                {
-                    var initialData = dataStore.InitialDataRecord(_initLockTime);
-                    await FirstSendAsync(initialData, cancellationToken);
-                    Console.WriteLine("Initial data recorded.");
-                    lock (_lock)
-                    {
-                        _isStarted = true;
-                    }
-                }
-                await Task.WhenAll(listenTask, processTask);
+                    clients,
+                    serverTerminator,
+                    clientSocket,
+                    startStateStore,
+                    _initLockTime
+                );
+                await worker.RunAsync(_processorCount, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -160,38 +139,22 @@ namespace SocketServerApp
             finally
             {
                 Console.WriteLine($"ClientId: {clientId} is closed.");
-                if (client.Connected)
+                if (clientSocket.Connected)
                 {
-                    client.Shutdown(SocketShutdown.Both);
+                    clientSocket.Shutdown(SocketShutdown.Both);
                 }
-                client.Dispose();
+                clientSocket.Dispose();
 
                 if (!string.IsNullOrEmpty(clientId))
                 {
-                    _clients.TryRemove(clientId, out _);
+                    clients.TryRemove(clientId);
                 }
 
-                if (_clients.IsEmpty)
+                if (clients.IsEmpty)
                 {
                     await _cts.CancelAsync();
                 }
             }
-        }
-        
-        private async Task FirstSendAsync(DataRecord record, CancellationToken cancellationToken)
-        {
-            var tasks = _clients.Values.Select(client =>
-                    client.SendLockTimeAsync(record, cancellationToken));
-            await Task.WhenAll(tasks);
-        }
-
-        private bool CanInitAndFirstSend()
-        {
-            if (_isStarted) return false;
-            lock (_lock)
-            {
-                return !_isStarted && _clients.Count >= _startConnectionCount;
-            } 
         }
     }
 }

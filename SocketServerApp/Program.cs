@@ -3,10 +3,11 @@
 var hostIpAddress = "127.0.0.1";
 var hostPort = 12345;
 var startConnectionCount = 5;
-var endCount = 10;
+var endCount = 100;
 var initLockTimeSeconds = 2;
 var socketConnectionQueue = 1000;
 var serverTerminatedDelaySeconds = 5;
+var processorCount = 3;
 
 using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) =>
@@ -25,7 +26,8 @@ try
         endCount,
         initLockTimeSeconds,
         socketConnectionQueue,
-        serverTerminatedDelaySeconds);
+        serverTerminatedDelaySeconds,
+        processorCount);
     
     var server = Server.Create(config, cts);
     await server.StartAsync(cts.Token);

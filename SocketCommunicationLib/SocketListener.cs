@@ -8,19 +8,16 @@ public class SocketListener
 {
     private readonly Socket _socket;
     private readonly SocketMessageStringExtractor _socketMessageStringExtractor;
-    private readonly IChannel<Message> _channel;
 
     public SocketListener(
         Socket socket,
-        SocketMessageStringExtractor socketMessageStringExtractor,
-        IChannel<Message> channel)
+        SocketMessageStringExtractor socketMessageStringExtractor)
     {
         _socket = socket;
         _socketMessageStringExtractor = socketMessageStringExtractor;
-        _channel = channel;
     }
 
-    public async Task ListenAsync(CancellationToken cancellationToken)
+    public async Task ListenAsync(IChannel<Message> outputChannel, CancellationToken cancellationToken)
     {
         MessageConverter converter = new MessageConverter();
         while (!cancellationToken.IsCancellationRequested)
@@ -31,7 +28,7 @@ public class SocketListener
             foreach (var item in messages)
             {
                 Message message = converter.Convert(item);
-                await _channel.WriteAsync(message, cancellationToken);
+                await outputChannel.WriteAsync(message, cancellationToken);
             }
         }
     }
