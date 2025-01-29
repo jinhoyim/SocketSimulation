@@ -1,3 +1,4 @@
+using SocketCommunicationLib.Contract;
 using SocketCommunicationLib.Model;
 using SocketServerApp.Communication;
 using SocketServerApp.Store;
@@ -29,13 +30,15 @@ public class NextDataHandler
         
         if (!_store.TryGet(id, out var record))
         {
-            await _communicator.SendNotFoundDataAsync(id, cancellationToken);
+            var errorData = new ErrorData($"Id: {id}, Could not find record.");
+            await _communicator.SendNotFoundDataAsync(errorData, cancellationToken);
             return;
         }
 
         if (!HasModifyPermission(record))
         {
-            await _communicator.SendHasNotModifyPermissionAsync(id, cancellationToken);
+            var errorData = new ErrorData($"Id: {id}, Has not modify permission for record.");
+            await _communicator.SendHasNotModifyPermissionAsync(errorData, cancellationToken);
             return;
         }
 

@@ -52,10 +52,12 @@ public class ServerJobProcessor
                     await _nextDataHandler.SaveNextDataAsync(nextData, cancellationToken);
                     break;
                 case Unknown:
-                    await _communicator.SendBadRequestAsync(content.ToString() ?? string.Empty, cancellationToken);
+                    await _communicator.SendBadRequestAsync(
+                        new ErrorData($"Bad Request: \"{content}\"."), cancellationToken);
                     break;
                 default:
-                    await _communicator.SendUnsupportedAsync(content.ToString() ?? string.Empty, cancellationToken);
+                    await _communicator.SendUnsupportedAsync(
+                        new ErrorData($"Unsupported Request: \"{content}\"."), cancellationToken);
                     break;
             }
 

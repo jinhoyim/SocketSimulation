@@ -17,29 +17,23 @@ public class ServerCommunicator(Socket socket) : SocketCommunicator(socket)
         await SendAsync(data, DataProtocolConstants.ErrorDataLocked, cancellationToken);
     }
 
-    public async Task SendNotFoundDataAsync(string id, CancellationToken cancellationToken)
+    public async Task SendNotFoundDataAsync(ErrorData errorData, CancellationToken cancellationToken)
     {
-        var errorData = new ErrorData($"Could not find record with id '{id}'");
         await SendAsync(errorData, DataProtocolConstants.ErrorNotFoundData, cancellationToken);
     }
 
-    public async Task SendHasNotModifyPermissionAsync(string id, CancellationToken cancellationToken)
+    public async Task SendHasNotModifyPermissionAsync(ErrorData errorData, CancellationToken cancellationToken)
     {
-        var errorData = new ErrorData($"Has not modify permission for record with id '{id}'");
         await SendAsync(errorData, DataProtocolConstants.ErrorNotModifyPermission, cancellationToken);
     }
     
-    public async Task SendBadRequestAsync(string content, CancellationToken cancellationToken)
+    public async Task SendBadRequestAsync(ErrorData errorData, CancellationToken cancellationToken)
     {
-        var errorMessage = $"Bad Request: \"{content}\".";
-        var errorData = new ErrorData(errorMessage);
         await SendAsync(errorData, DataProtocolConstants.ErrorBadRequest, cancellationToken);
     }
 
-    public async Task SendUnsupportedAsync(string content, CancellationToken cancellationToken)
+    public async Task SendUnsupportedAsync(ErrorData errorData, CancellationToken cancellationToken)
     {
-        var errorMessage = $"Unsupported Request: \"{content}\".";
-        var errorData = new ErrorData(errorMessage);
         await SendAsync(errorData, DataProtocolConstants.ErrorUnsupportedRequest, cancellationToken);
     }
 

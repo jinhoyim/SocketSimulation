@@ -28,7 +28,7 @@ public class QueryDataHandler
 
         if (!dataRecord.LockTime.IsExpired(DateTime.Now))
         {
-            var errorData = new ErrorData<string>(recordId, $"Cannot access locked data(Id: {recordId})");
+            var errorData = new ErrorData<string>(recordId, $"Id: {recordId}, Cannot access locked data.");
             await _communicator.SendDataLockedAsync(errorData, cancellationToken);
             return;
         }
@@ -50,7 +50,7 @@ public class QueryDataHandler
 
     private async Task SendEmptyDataAsync(string recordId, CancellationToken cancellationToken)
     {
-        var errorData = new ErrorData<string>(recordId, $"Data is empty(Id: {recordId})");
+        var errorData = new ErrorData<string>(recordId, $"Id: {recordId}, Data is empty.");
         await _communicator.SendEmptyDataAsync(errorData, cancellationToken);
     }
 }
