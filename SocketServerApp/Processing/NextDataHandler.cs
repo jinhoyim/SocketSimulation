@@ -35,26 +35,15 @@ public class NextDataHandler
             return;
         }
 
-        if (!HasModifyPermission(record))
+        if (record.TryUpdate(_clientId, lockTime, value, out var updatedRecord, out var errorMessage))
         {
-            var errorData = new ErrorData($"Id: {id}, Has not modify permission for record.");
-            await _communicator.SendHasNotModifyPermissionAsync(errorData, cancellationToken);
-            return;
+            _store.Update(updatedRecord);    
+            await _multiCommunicator.SendNextLockTimeAsync(_clientId, updatedRecord, cancellationToken);
         }
-
-        var updatedRecord = UpdateRecord(record, lockTime, value);
-        await _multiCommunicator.SendNextLockTimeAsync(_clientId, updatedRecord, cancellationToken);
-    }
-
-    private bool HasModifyPermission(DataRecord record)
-    {
-        return string.IsNullOrEmpty(record.CreatedClientId) || record.CreatedClientId == _clientId;
-    }
-
-    private DataRecord UpdateRecord(DataRecord record, LockTime lockTime, int value)
-    {
-        var updatedRecord = record.CopyWith(lockTime, value);
-        _store.Update(updatedRecord);
-        return updatedRecord;
+        else
+        {
+            var errorData = new ErrorData(errorMessage);
+            await _communicator.SendHasNotModifyPermissionAsync(errorData, cancellationToken);
+        }
     }
 }

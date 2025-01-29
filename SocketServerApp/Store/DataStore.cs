@@ -65,7 +65,7 @@ public class DataStore
         }
         var number = Interlocked.Increment(ref _increment);
         nextId = number.ToString();
-        _dataCache[nextId] = DataRecord.Empty with { Id = nextId, CreatedClientId = clientId };
+        _dataCache[nextId] = DataRecord.Create(nextId, clientId);
         return true;
     }
 
