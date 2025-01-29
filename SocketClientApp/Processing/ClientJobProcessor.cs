@@ -57,25 +57,24 @@ public class ClientJobProcessor
                     _errorHandler.WriteErrorDataLocked(errorData.Message);
                     await _queryHandler.RetryQueryAfterLockTimeAsync(errorData.Data, cancellationToken);
                     break;
-                case ErrorBadRequest:
-                    Console.WriteLine($"Error: {ErrorBadRequest}");
+                case ErrorNotFoundData when content is ErrorData errorData:
+                    _errorHandler.WriteError(errorData.Message);
+                    break;
+                case ErrorNotModifyPermission when content is ErrorData errorData:
+                    _errorHandler.WriteError(errorData.Message);
+                    break;
+                case ErrorBadRequest when content is ErrorData errorData:
+                    _errorHandler.WriteError(errorData.Message);
+                    break;
+                case ErrorUnsupportedRequest when content is ErrorData errorData:
+                    _errorHandler.WriteError(errorData.Message);
+                    break;
+                case Unknown:
+                    _errorHandler.WriteError($"Unknown message. {content}");
                     break;
                 case ProtocolConstants.ServerTerminated:
                     await _cts.CancelAsync();
                     break;
-                
-            // else if ReceiveData
-            // Logging Data + LockTime + SuccessCount
-            // Create Data + LockTime
-            
-            // else if NotYetExpiredLockTime
-            // Logging NotYetExpiredLockTime Count
-            // delay LockTime
-            // retry query QueryData
-            
-            // else if DataIsEmpty
-            // Logging FailedCount
-                
             }
         }
     }

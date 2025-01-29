@@ -3,8 +3,10 @@ namespace SocketClientApp.Store;
 public class CountStore
 {
     private int _successfulCount;
+    private int _failedCount;
+    
+    // Retry 횟수가 일반 실패 횟수에 포함되지 않도록 구분한다.
     private int _failedLockingCount;
-    private int _failedEmptyCount;
 
     public int IncrementSuccessful()
     {
@@ -16,13 +18,13 @@ public class CountStore
         return Interlocked.Increment(ref _failedLockingCount);
     }
 
-    public int IncrementEmptyFailed()
+    public int IncrementFailed()
     {
-        return Interlocked.Increment(ref _failedEmptyCount);
+        return Interlocked.Increment(ref _failedCount);
     }
 
     public (int lockingCount, int emptyCount) GetFailedCounts()
     {
-        return (lockingCount: _failedLockingCount, emptyCount: _failedEmptyCount);
+        return (lockingCount: _failedLockingCount, emptyCount: _failedCount);
     }
 }
