@@ -10,11 +10,16 @@ public record LockTime(int Hour, int Minute, int Second, int Millisecond)
     
     public TimeSpan TimeLeftToExpire(DateTime utcNow)
     {
-        TimeSpan expireTime = utcNow.Hour == 23 && Hour == 0 ?
-            ToTimeSpan().Add(TimeSpan.FromDays(1)) : ToTimeSpan();
-
-        var delay = expireTime - utcNow.TimeOfDay;
-        return delay;
+        var target = utcNow.TimeOfDay;
+        if (utcNow.Hour == 23 && Hour == 0)
+        {
+            target = target.Add(TimeSpan.FromDays(-1));
+        }
+        else if (utcNow.Hour == 0 && Hour == 23)
+        {
+            target = target.Add(TimeSpan.FromDays(1));
+        }
+        return ToTimeSpan() - target;
     }
     
     public bool IsExpired(DateTime utcNow) => TimeLeftToExpire(utcNow) <= TimeSpan.Zero;
