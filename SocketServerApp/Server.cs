@@ -98,7 +98,7 @@ namespace SocketServerApp
                     communicator,
                     new QueryDataHandler(clientId, communicator, dataStore),
                     new MessageConverter(),
-                    new NextDataHandler(dataStore, clientId, socketsCommunicator),
+                    new NextDataHandler(dataStore, clientId, communicator, socketsCommunicator),
                     serverTerminator);
 
                 var messageListener = new SocketListener(

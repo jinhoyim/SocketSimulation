@@ -16,6 +16,18 @@ public class ServerCommunicator(Socket socket) : SocketCommunicator(socket)
     {
         await SendAsync(data, DataProtocolConstants.ErrorDataLocked, cancellationToken);
     }
+
+    public async Task SendNotFoundDataAsync(string id, CancellationToken cancellationToken)
+    {
+        var errorData = new ErrorData<string>(id, $"Could not find record with id '{id}'");
+        await SendAsync(errorData, DataProtocolConstants.ErrorNotFoundData, cancellationToken);
+    }
+
+    public async Task SendHasNotModifyPermissionAsync(string id, CancellationToken cancellationToken)
+    {
+        var errorData = new ErrorData<string>(id, $"Has not modify permission for record with id '{id}'");
+        await SendAsync(errorData, DataProtocolConstants.ErrorNotModifyPermission, cancellationToken);
+    }
     
     public async Task SendBadRequestAsync(string content, CancellationToken cancellationToken)
     {

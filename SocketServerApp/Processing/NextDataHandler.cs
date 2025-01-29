@@ -8,12 +8,18 @@ public class NextDataHandler
 {
     private readonly DataStore _store;
     private readonly string _clientId;
+    private readonly ServerCommunicator _communicator;
     private readonly SocketsCommunicator _multiCommunicator;
 
-    public NextDataHandler(DataStore store, string clientId, SocketsCommunicator multiCommunicator)
+    public NextDataHandler(
+        DataStore store,
+        string clientId,
+        ServerCommunicator communicator,
+        SocketsCommunicator multiCommunicator)
     {
         _store = store;
         _clientId = clientId;
+        _communicator = communicator;
         _multiCommunicator = multiCommunicator;
     }
 
@@ -23,17 +29,23 @@ public class NextDataHandler
         
         if (!_store.TryGet(id, out var record))
         {
-            // 서버 오류 데이터를 추가할 준비가 되지 않음 오류
+            await _communicator.SendNotFoundDataAsync(id, cancellationToken);
             return;
         }
 
-        if (record.CreatedClientId != _clientId && !string.IsNullOrEmpty(record.CreatedClientId))
+        if (!HasModifyPermission(record))
         {
-            // 저장할 수 있는 Client 가 아니다.
+            await _communicator.SendHasNotModifyPermissionAsync(id, cancellationToken);
+            return;
         }
 
         var updatedRecord = UpdateRecord(record, lockTime, value);
         await _multiCommunicator.SendNextLockTimeAsync(_clientId, updatedRecord, cancellationToken);
+    }
+
+    private bool HasModifyPermission(DataRecord record)
+    {
+        return string.IsNullOrEmpty(record.CreatedClientId) || record.CreatedClientId == _clientId;
     }
 
     private DataRecord UpdateRecord(DataRecord record, LockTime lockTime, int value)

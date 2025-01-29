@@ -8,8 +8,11 @@ public static class DataProtocolConstants
     // 쿼리 결과 에러
     public const string ErrorEmptyData = "<|DATA|ERROREMPTYDATA|>";
     public const string ErrorDataLocked = "<|DATA|ERRORDATALOCKED|>";
-
+    
     public const string NextData = "<|DATA|NEXTDATA|>"; // 다음 데이터 생성
+    public const string ErrorNotFoundData = "<|DATA|ERRORNOTFOUNDDATA|>";
+    public const string ErrorNotModifyPermission = "<|DATA|ERRORNOTMODIFYPERMISSION|>";
+    
     public const string DataLockTime = "<|DATA|LOCKTIME|>"; // Id 에 대한 LockTime 전송
     public const string DataWithNext = "<|DATA|DATAWITHNEXT|>"; // 조회 요청에 대한 결과로 데이터와 NextId 전송
 
