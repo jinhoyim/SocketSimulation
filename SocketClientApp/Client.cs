@@ -61,6 +61,7 @@ public class Client
             if (!connected)
             {
                 Console.WriteLine($"Connection failed and application stop. {errorMessage}");
+                return;
             }
 
             var worker = new ClientWorker(server, _maxMilliseconds, _afterLockTime, _cts);
