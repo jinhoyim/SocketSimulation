@@ -10,24 +10,24 @@ public class DataStore
     private readonly ConcurrentDictionary<string, DataRecord> _dataCache = new();
     private readonly int _maxSize;
     
+    // save cound
     private int _saveCount = 0;
+
+    // remove count
+    private int _removeCount = 0;
+    
+    // id
     private int _increment = 0;
 
     public DataStore(int maxSize)
     {
         _maxSize = maxSize;
     }
-    
-    public int Save(DataRecord record)
-    {
-        var id = Interlocked.Increment(ref _saveCount);
-        _dataCache[id.ToString()] = record;
-        return id;
-    }
 
     public void Update(DataRecord record)
     {
         _dataCache[record.Id] = record;
+        Interlocked.Increment(ref _saveCount);
     }
 
     public DataRecord InitialDataRecord()
@@ -36,7 +36,10 @@ public class DataStore
         var lockTime = LockTime.From(dateTime);
         var number = Interlocked.Increment(ref _increment);
         var id = number.ToString();
-        return new DataRecord(id, lockTime, string.Empty, dateTime.Millisecond);
+        var dataRecord = new DataRecord(id, lockTime, string.Empty, dateTime.Millisecond);
+        Interlocked.Increment(ref _saveCount);
+        _dataCache[id] = dataRecord;
+        return dataRecord;
     }
     
     public bool TryGet(string id, [MaybeNullWhen(false)] out DataRecord record)
@@ -46,7 +49,12 @@ public class DataStore
 
     public bool TryRemove(DataRecord item)
     {
-        return _dataCache.TryRemove(KeyValuePair.Create(item.Id, item));
+        if (_dataCache.TryRemove(KeyValuePair.Create(item.Id, item)))
+        {
+            Interlocked.Increment(ref _removeCount);
+            return true;
+        }
+        return false;
     }
 
     public bool TryCreateNext(string clientId, [MaybeNullWhen(false)] out string nextId)
@@ -61,4 +69,6 @@ public class DataStore
         _dataCache[nextId] = DataRecord.Empty with { Id = nextId, CreatedClientId = clientId };
         return true;
     }
+
+    public bool IsSaveRemoveCompleted => _saveCount >= _maxSize && _removeCount >= _maxSize;
 }

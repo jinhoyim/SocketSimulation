@@ -61,12 +61,10 @@ public class ServerJobProcessor
                     break;
             }
 
-            // var savedCount = _dataStore.Save();
-            // savedCount++;
-            // if (savedCount == 4)
-            // {
-            // await _serverTerminator.ServerTerminate(cancellationToken);
-            // }
+            if (_dataStore.IsSaveRemoveCompleted)
+            {
+                await _serverTerminator.ServerTerminate(cancellationToken);
+            }
         }
     }
 }

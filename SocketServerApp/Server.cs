@@ -114,7 +114,6 @@ namespace SocketServerApp
                 if (CanInitAndFirstSend())
                 {
                     var initialData = dataStore.InitialDataRecord();
-                    dataStore.Save(initialData);
                     await FirstSendAsync(initialData, cancellationToken);
                     Console.WriteLine("Initial data recorded.");
                     lock (_lock)
