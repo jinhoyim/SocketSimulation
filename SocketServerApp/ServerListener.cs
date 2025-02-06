@@ -1,5 +1,5 @@
-using System.Net;
 using System.Net.Sockets;
+using Microsoft.Extensions.Options;
 
 namespace SocketServerApp;
 
@@ -8,25 +8,16 @@ public class ServerListener : IDisposable
     private readonly Socket _socket;
     private readonly LingerOption _lingerOption;
 
-    private ServerListener(Socket socket, LingerOption lingerOption)
+    public ServerListener(IOptions<ServerConfig> config)
     {
-        _socket = socket;
-        _lingerOption = lingerOption;
-    }
-    
-    public static ServerListener Create(
-        IPEndPoint ipEndPoint,
-        LingerOption lingerOption,
-        int socketConnectionQueue)
-    {
-        var socket = new Socket(
+        var ipEndPoint = config.Value.IpEndPoint;
+        _socket = new Socket(
             ipEndPoint.AddressFamily,
             SocketType.Stream,
             ProtocolType.Tcp);
-        
-        socket.Bind(ipEndPoint);
-        socket.Listen(socketConnectionQueue);
-        return new ServerListener(socket, lingerOption);
+        _socket.Bind(ipEndPoint);
+        _socket.Listen(config.Value.SocketConnectionQueue);
+        _lingerOption = config.Value.LingerOption;
     }
 
     public async Task<Socket> AcceptAsync(CancellationToken cancellationToken = default)

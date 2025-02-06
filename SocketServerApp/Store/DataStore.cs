@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Options;
 using SocketCommunicationLib.Model;
 
 namespace SocketServerApp.Store;
@@ -18,9 +19,9 @@ public class DataStore : IDataStore
     // id
     private int _increment = 0;
 
-    public DataStore(int maxSize)
+    public DataStore(IOptions<ServerConfig> config)
     {
-        _maxSize = maxSize;
+        _maxSize = config.Value.EndCount;
     }
 
     public void Update(DataRecord record)

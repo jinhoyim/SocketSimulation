@@ -1,79 +1,54 @@
-﻿using System.Net;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
+using Microsoft.Extensions.Options;
 using SocketServerApp.Communication;
-using SocketServerApp.Output;
 using SocketServerApp.Processing;
 using SocketServerApp.Store;
 
 namespace SocketServerApp
 {
-    public class Server
+    public class Server : ISocketServer
     {
-        private readonly LingerOption _lingerOption = new(true, 10);
-        private readonly int _socketConnectionQueue;
-        
-        private readonly IPEndPoint _ipEndPoint;
-        private readonly int _startConnectionCount;
-        private readonly int _endCount;
-        private readonly TimeSpan _initLockTime;
-        private readonly TimeSpan _serverTerminatedDelay;
+        private readonly AllCilentsCommunicator _clients;
+        private readonly IDataStore _dataStore;
+        private readonly StartStateStore _startStateStore;
+        private readonly ServerListener _connectionListener;
+        private readonly ServerTerminator _serverTerminator;
+        private readonly ServerConfig _config;
         private readonly CancellationTokenSource _cts;
-        private readonly int _processorCount;
 
-        private Server(
-            IPEndPoint ipEndPoint,
-            int startConnectionCount,
-            int endCount,
-            TimeSpan initLockTime,
-            int socketConnectionQueue,
-            TimeSpan serverTerminatedDelay,
-            int processorCount,
+        public Server(
+            AllCilentsCommunicator clients,
+            IDataStore dataStore,
+            StartStateStore startStateStore,
+            ServerListener connectionListener,
+            ServerTerminator serverTerminator,
+            IOptions<ServerConfig> config,
             CancellationTokenSource cts)
         {
-            _ipEndPoint = ipEndPoint;
-            _startConnectionCount = startConnectionCount;
-            _endCount = endCount;
-            _initLockTime = initLockTime;
-            _socketConnectionQueue = socketConnectionQueue;
-            _serverTerminatedDelay = serverTerminatedDelay;
-            _processorCount = processorCount;
+            _clients = clients;
+            _dataStore = dataStore;
+            _startStateStore = startStateStore;
+            _connectionListener = connectionListener;
+            _serverTerminator = serverTerminator;
+            _config = config.Value;
             _cts = cts;
         }
 
-        public static Server Create(ServerConfig config, CancellationTokenSource cts)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            return new Server(
-                config.IpEndPoint,
-                config.StartConnectionCount,
-                config.EndCount,
-                config.InitLockTime,
-                config.SocketConnectionQueue,
-                config.ServerTerminatedDelay,
-                config.ProcessorCount,
-                cts);
-        }
-
-        internal async Task StartAsync(CancellationToken cancellationToken)
-        {
-            using var connectionListener = ServerListener.Create(_ipEndPoint, _lingerOption, _socketConnectionQueue);
-            var clients = new AllCilentsCommunicator();
-            var serverTerminator = new ServerTerminator(clients, _serverTerminatedDelay, _cts);
-            var dataStore = new SaveLoggingDataStore(new DataStore(_endCount), new OutputWriter());
-            var startStateStore = new StartStateStore(clients, _startConnectionCount);
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var client = await connectionListener.AcceptAsync(cancellationToken);
+                    var client = await _connectionListener.AcceptAsync(cancellationToken);
                     _ = Task.Run(async () =>
                     {
                         await ClientHandleAsync(
                             client,
-                            serverTerminator,
-                            dataStore,
-                            clients,
-                            startStateStore,
+                            _serverTerminator,
+                            _dataStore,
+                            _clients,
+                            _startStateStore,
                             cancellationToken);
                     }, cancellationToken);
                 }
@@ -114,9 +89,9 @@ namespace SocketServerApp
                     clients,
                     serverTerminator,
                     startStateStore,
-                    _initLockTime
+                    _config.InitLockTime
                 );
-                await worker.RunAsync(_processorCount, cancellationToken);
+                await worker.RunAsync(_config.ProcessorCount, cancellationToken);
             }
             catch (OperationCanceledException)
             {

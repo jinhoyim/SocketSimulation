@@ -1,36 +1,19 @@
 using System.Net;
+using System.Net.Sockets;
+
+namespace SocketServerApp;
 
 public class ServerConfig
 {
-    public IPEndPoint IpEndPoint { get; }
-    public int StartConnectionCount { get; }
-    public int EndCount { get; }
-    public TimeSpan InitLockTime { get; }
-    public int SocketConnectionQueue { get; }
-    public TimeSpan ServerTerminatedDelay { get; }
-    public int ProcessorCount { get; }
+    public string IpAddress { get; set; } = "127.0.0.1";
+    public int Port { get; set; } = 12345;
 
-    public ServerConfig(
-        string ipAddress,
-        int hostPort,
-        int startConnectionCount,
-        int endCount,
-        int initLockTimeSeconds,
-        int socketConnectionQueue,
-        int serverTerminatedDelaySeconds,
-        int processorCount)
-    {
-        if (!IPAddress.TryParse(ipAddress, out var ip))
-        {
-            throw new ArgumentException("Invalid IP address.", nameof(ipAddress));
-        }
-
-        IpEndPoint = new IPEndPoint(ip, hostPort);
-        StartConnectionCount = startConnectionCount;
-        EndCount = endCount;
-        InitLockTime = TimeSpan.FromSeconds(initLockTimeSeconds);
-        SocketConnectionQueue = socketConnectionQueue;
-        ServerTerminatedDelay = TimeSpan.FromSeconds(serverTerminatedDelaySeconds);
-        ProcessorCount = processorCount;
-    }
+    public IPEndPoint IpEndPoint => new(IPAddress.Parse(IpAddress), Port);
+    public int StartConnectionCount { get; set; } = 3;
+    public int EndCount { get; set; } = 100;
+    public TimeSpan InitLockTime { get; set; } = TimeSpan.FromSeconds(2);
+    public int SocketConnectionQueue { get; set; } = 1000;
+    public TimeSpan ServerTerminatedDelay { get; set; } = TimeSpan.FromSeconds(5);
+    public int ProcessorCount { get; set; } = 3;
+    public LingerOption LingerOption { get; set; } = new(true, 10);
 }

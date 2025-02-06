@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using SocketServerApp.Communication;
 
 namespace SocketServerApp.Processing;
@@ -12,11 +13,11 @@ public class ServerTerminator
 
     public ServerTerminator(
         AllCilentsCommunicator communicator,
-        TimeSpan serverTerminatedDelay,
+        IOptions<ServerConfig> serverConfig,
         CancellationTokenSource cts)
     {
         _communicator = communicator;
-        _serverTerminatedDelay = serverTerminatedDelay;
+        _serverTerminatedDelay = serverConfig.Value.ServerTerminatedDelay;
         _cts = cts;
     }
 

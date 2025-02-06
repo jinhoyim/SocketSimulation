@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using SocketServerApp.Communication;
 
 namespace SocketServerApp.Store;
@@ -9,10 +10,10 @@ public class StartStateStore
     private readonly int _startConnectionCount;
     private readonly AllCilentsCommunicator _clients;
 
-    public StartStateStore(AllCilentsCommunicator clients, int startConnectionCount)
+    public StartStateStore(AllCilentsCommunicator clients, IOptions<ServerConfig> config)
     {
         _clients = clients;
-        _startConnectionCount = startConnectionCount;
+        _startConnectionCount = config.Value.StartConnectionCount;
     }
     
     public bool CanInitAndFirstSend()
