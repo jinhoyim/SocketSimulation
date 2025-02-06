@@ -12,7 +12,7 @@ public class DataRecord
         Value = value;
     }
 
-    public static DataRecord Empty => new DataRecord(string.Empty, LockTime.Empty, string.Empty, 0);
+    public static DataRecord Empty { get; } = new DataRecord(string.Empty, LockTime.Empty, string.Empty, 0);
     public string Id { get; }
     public LockTime LockTime { get; }
     public string CreatedClientId { get; }
