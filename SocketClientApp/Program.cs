@@ -1,22 +1,38 @@
-﻿using SocketClientApp;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using SocketClientApp;
+using SocketClientApp.Output;
+using SocketClientApp.Processing;
+using SocketClientApp.Store;
 
 if (args.Length == 0)
 {
     Console.WriteLine("Please run with clientId");
-    Console.WriteLine("dotnet <app> <client id>");
+    Console.WriteLine("dotnet <app> --clientId=<client id>");
     return;
 }
 
-var clientId = args[0];
-var serverIpAddress = "127.0.0.1";
-var serverPort = 12345;
-var maxMilliseconds = 2000;
-var processorCount = 1;
-
-// true인 경우 LockTime 대기 시간에 1밀리초를 추가 
-var afterLockTime = false;
-
 var cts = new CancellationTokenSource();
+
+var builder = Host.CreateApplicationBuilder(args);
+builder.Configuration.AddCommandLine(args);
+builder.Services.AddOptions<ClientConfig>().Bind(builder.Configuration)
+    .Validate(options => !string.IsNullOrWhiteSpace(options.ClientId));
+builder.Services.AddSingleton<ISocketClient, Client>();
+builder.Services.AddSingleton<ConnectorFactory>();
+builder.Services.AddSingleton<ClientCommunicatorFactory>();
+builder.Services.AddSingleton<ClientJobProcessorFactory>();
+builder.Services.AddSingleton<SocketListenerFactory>();
+builder.Services.AddScoped<ClientWorker>();
+builder.Services.AddScoped<CountStore>();
+builder.Services.AddScoped<OutputWriter>();
+builder.Services.AddScoped<LockTimesStore>();
+builder.Services.AddScoped<NextDataGenerator>();
+builder.Services.AddSingleton(cts);
+
+var app = builder.Build();
+
 Console.CancelKeyPress += (_, _) =>
 {
     cts.Cancel();
@@ -25,14 +41,7 @@ Console.CancelKeyPress += (_, _) =>
 
 try
 {
-    var config = new ClientConfig(
-        clientId,
-        serverIpAddress,
-        serverPort,
-        maxMilliseconds,
-        processorCount,
-        afterLockTime);
-    var client = Client.Create(config, cts);
+    var client = app.Services.GetRequiredService<ISocketClient>();
     await client.StartAsync();
 }
 catch (OperationCanceledException)

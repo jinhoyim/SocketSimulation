@@ -1,69 +1,41 @@
 using System.Net.Sockets;
-using System.Text;
+using Microsoft.Extensions.Options;
 using SocketClientApp.Channel;
-using SocketClientApp.Communication;
-using SocketClientApp.Output;
-using SocketClientApp.Processing;
-using SocketClientApp.Store;
-using SocketCommunicationLib;
 using SocketCommunicationLib.Contract;
 
 namespace SocketClientApp;
 
 public class ClientWorker
 {
-    private readonly ClientCommunicator _communicator;
-    private readonly LockTimesStore _lockTimesStore;
-    private readonly CountStore _countStore;
-    private readonly OutputWriter _writer;
-    private readonly int _maxMilliseconds;
-    private readonly CancellationTokenSource _cts;
-    private readonly bool _afterLockTime;
+    private readonly ClientCommunicatorFactory _clientCommunicatorFactory;
+    private readonly SocketListenerFactory _socketListenerFactory;
+    private readonly ClientJobProcessorFactory _clientJobProcessorFactory;
+    private readonly int _processorCount;
 
-    public ClientWorker(Socket serverSocket, int maxMilliseconds, bool afterLockTime, CancellationTokenSource cts)
+    public ClientWorker(
+        ClientCommunicatorFactory clientCommunicatorFactory,
+        SocketListenerFactory socketListenerFactory,
+        ClientJobProcessorFactory clientJobProcessorFactory,
+        IOptions<ClientConfig> config)
     {
-        _maxMilliseconds = maxMilliseconds;
-        _cts = cts;
-        _communicator = new ClientCommunicator(serverSocket);
-        _lockTimesStore = new LockTimesStore();
-        _countStore = new CountStore();
-        _writer = new OutputWriter(_countStore);
-        _afterLockTime = afterLockTime;
+        _clientCommunicatorFactory = clientCommunicatorFactory;
+        _socketListenerFactory = socketListenerFactory;
+        _clientJobProcessorFactory = clientJobProcessorFactory;
+        _processorCount = config.Value.ProcessorCount;
     }
 
-    public async Task RunAsync(int processorCount, CancellationToken cancellationToken)
+    public async Task RunAsync(Socket socket, CancellationToken cancellationToken)
     {
-        var jobChannel = new ClientJobChannel<Message>();        
-        var messageListener = CreateSocketListener();
+        var communicator = _clientCommunicatorFactory.Create(socket);
+        var messageListener = _socketListenerFactory.Create(communicator);
+        
+        var jobChannel = new ClientJobChannel<Message>();
 
-        var tasks = Enumerable.Range(0, processorCount)
-            .Select(t => CreateJobProcessor().ProcessAsync(jobChannel, cancellationToken))
+        var tasks = Enumerable.Range(0, _processorCount)
+            .Select(t => _clientJobProcessorFactory.Create(communicator)
+                .ProcessAsync(jobChannel, cancellationToken))
             .ToList();
         tasks.Add(messageListener.ListenAsync(jobChannel, cancellationToken));
-        
         await Task.WhenAll(tasks);
-    }
-
-    private ClientJobProcessor CreateJobProcessor()
-    {
-        return new ClientJobProcessor(
-            new QuerySuccessfulHandler(
-                _communicator,
-                new NextDataGenerator(_maxMilliseconds),
-                _countStore,
-                _writer),
-            new QueryHandler(_communicator, _lockTimesStore, _afterLockTime),
-            new ErrorHandler(_countStore, _writer, _lockTimesStore),
-            _cts);
-    }
-
-    private SocketListener CreateSocketListener()
-    {
-        return new SocketListener(
-            _communicator.Socket,
-            new SocketMessageStringExtractor(
-                ProtocolConstants.Eom,
-                Encoding.UTF8)
-        );
     }
 }

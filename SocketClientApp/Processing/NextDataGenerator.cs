@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using SocketCommunicationLib.Model;
 
 namespace SocketClientApp.Processing;
@@ -7,10 +8,10 @@ public class NextDataGenerator
     private readonly Random _random;
     private readonly int _maxMilliseconds;
 
-    public NextDataGenerator(int maxMilliseconds)
+    public NextDataGenerator(IOptions<ClientConfig> config)
     {
         _random = new Random();
-        _maxMilliseconds = maxMilliseconds;
+        _maxMilliseconds = config.Value.MaxMilliseconds;
     }
     
     public NextDataValue CreateNewData(string nextId)

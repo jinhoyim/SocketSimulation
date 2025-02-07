@@ -1,47 +1,33 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using SocketClientApp.Communication;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace SocketClientApp;
 
-public class Client
+public class Client : ISocketClient
 {
-    private const int LingerTimeSeconds = 10;
-    private readonly string _clientId;
     private readonly IPEndPoint _ipEndPoint;
-    private readonly int _maxMilliseconds;
+    private readonly LingerOption _lingerOption;
+    private readonly ConnectorFactory _connectorFactory;
     private readonly CancellationTokenSource _cts;
-    private readonly int _processorCount;
-    private readonly bool _afterLockTime;
+    private readonly IServiceProvider _serviceProvider;
 
-    private Client(
-        string clientId,
-        IPEndPoint ipEndPoint,
-        int maxMilliseconds,
-        int processorCount,
-        bool afterLockTime,
-        CancellationTokenSource cts)
+    public Client(
+        IOptions<ClientConfig> config,
+        ConnectorFactory connectorFactory,
+        IServiceProvider serviceProvider,
+        CancellationTokenSource cancellationTokenSource
+        )
     {
-        _clientId = clientId;
-        _ipEndPoint = ipEndPoint;
-        _maxMilliseconds = maxMilliseconds;
-        _processorCount = processorCount;
-        _afterLockTime = afterLockTime;
-        _cts = cts;
-    }
-    
-    public static Client Create(ClientConfig config, CancellationTokenSource cts)
-    {
-        return new Client(
-            config.ClientId,
-            config.ServerIpEndPoint,
-            config.MaxMilliseconds,
-            config.ProcessorCount,
-            config.AfterLockTime,
-            cts);
+        _ipEndPoint = config.Value.ServerIpEndPoint;
+        _lingerOption = config.Value.LingerOption;
+        _connectorFactory = connectorFactory;
+        _serviceProvider = serviceProvider;
+        _cts = cancellationTokenSource;
     }
 
-    internal async Task StartAsync()
+    public async Task StartAsync()
     {
         var cancellationToken = _cts.Token;
         
@@ -49,13 +35,13 @@ public class Client
             _ipEndPoint.AddressFamily,
             SocketType.Stream,
             ProtocolType.Tcp);
-        server.LingerState = new LingerOption(true, LingerTimeSeconds);
+        server.LingerState = _lingerOption;
 
         try
         {
             await server.ConnectAsync(_ipEndPoint, cancellationToken);
 
-            var connector = new Connector(server, _clientId);
+            var connector = _connectorFactory.Create(server);
             (bool connected, string errorMessage) = await connector.ConnectAsync(cancellationToken);
 
             if (!connected)
@@ -64,8 +50,9 @@ public class Client
                 return;
             }
 
-            var worker = new ClientWorker(server, _maxMilliseconds, _afterLockTime, _cts);
-            await worker.RunAsync(_processorCount, cancellationToken);
+            using var scope = _serviceProvider.CreateScope();
+            var worker = scope.ServiceProvider.GetRequiredService<ClientWorker>();
+            await worker.RunAsync(server, cancellationToken);
         }
         finally
         {

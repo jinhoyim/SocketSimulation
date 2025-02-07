@@ -1,30 +1,17 @@
 using System.Net;
+using System.Net.Sockets;
+
+namespace SocketClientApp;
 
 public class ClientConfig
 {
-    public string ClientId { get; }
-    public IPEndPoint ServerIpEndPoint { get; }
-    public int MaxMilliseconds { get; }
-    public int ProcessorCount { get; }
-    public bool AfterLockTime { get; }
-
-    public ClientConfig(
-        string clientId,
-        string serverIpAddress,
-        int serverPort,
-        int maxMilliseconds,
-        int processorCount,
-        bool afterLockTime)
-    {
-        if (!IPAddress.TryParse(serverIpAddress, out var ip))
-        {
-            throw new ArgumentException("Invalid IP address.", nameof(serverIpAddress));
-        }
-
-        ClientId = clientId;
-        ServerIpEndPoint = new IPEndPoint(ip, serverPort);
-        MaxMilliseconds = maxMilliseconds;
-        ProcessorCount = processorCount;
-        AfterLockTime = afterLockTime;
-    }
+    public string ClientId { get; set; } = string.Empty;
+    public string IpAddress { get; set; } = "127.0.0.1";
+    public int Port { get; set; } = 12345;
+    public IPEndPoint ServerIpEndPoint => new(IPAddress.Parse(IpAddress), Port);
+    public int MaxMilliseconds { get; set; } = 2000;
+    public int ProcessorCount { get; set; } = 1;
+    // true인 경우 LockTime 대기 시간에 1밀리초를 추가
+    public bool AfterLockTime { get; set; } = true;
+    public LingerOption LingerOption { get; set; } = new(true, 10);
 }
