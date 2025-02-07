@@ -15,8 +15,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddCommandLine(args);
 builder.Services.AddOptions<ServerConfig>().Bind(builder.Configuration)
     .Validate(options =>
-        IPAddress.TryParse(options.IpAddress, out _), "IP Address is invalid")
-    .PostConfigure(options => options.IpAddress = "127.0.0.1");
+        IPAddress.TryParse(options.IpAddress, out _), "IP Address is invalid");
 builder.Services.AddSingleton<ISocketServer, Server>();
 builder.Services.AddSingleton(cts);
 builder.Services.AddSingleton<AllCilentsCommunicator>();
