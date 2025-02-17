@@ -9,42 +9,27 @@ public class ClientHandler
 {
     private readonly AllCilentsCommunicator _clients;
     private readonly int _processorCount;
-    private readonly ClientIdentifierFactory _clientIdentifierFactory;
     private readonly ClientCommunicatorFactory _clientCommunicatorFactory;
     private readonly ServerWorkerFactory _serverWorkerFactory;
-    private readonly CancellationTokenSource _cts;
 
     public ClientHandler(
         AllCilentsCommunicator clients,
         IOptions<ServerConfig> config,
-        ClientIdentifierFactory clientIdentifierFactory,
         ClientCommunicatorFactory clientCommunicatorFactory,
-        ServerWorkerFactory serverWorkerFactory,
-        CancellationTokenSource cancellationTokenSource)
+        ServerWorkerFactory serverWorkerFactory)
     {
         _clients = clients;
         _processorCount = config.Value.ProcessorCount;
-        _clientIdentifierFactory = clientIdentifierFactory;
         _clientCommunicatorFactory = clientCommunicatorFactory;
         _serverWorkerFactory = serverWorkerFactory;
-        _cts = cancellationTokenSource;
     }
     
-    public async Task HandleAsync(Socket clientSocket, CancellationToken cancellationToken)
+    public async Task HandleAsync(ClientSession session, CancellationToken cancellationToken)
     {
-        var clientId = string.Empty;
         try
         {
-            var identifier = _clientIdentifierFactory.Create(clientSocket);
-            await identifier.IdentifyClientAsync(cancellationToken);
-            clientId = identifier.ClientId;
-            if (!identifier.IsVerified || string.IsNullOrEmpty(clientId))
-            {
-                return;
-            }
-
-            var communicator = _clientCommunicatorFactory.Create(clientId, clientSocket);
-            _clients.Add(clientId, communicator);
+            var communicator = _clientCommunicatorFactory.Create(session);
+            _clients.Add(session.ClientId, communicator);
             
             var worker = _serverWorkerFactory.Create(communicator);
             await worker.RunAsync(_processorCount, cancellationToken);
@@ -65,21 +50,17 @@ public class ClientHandler
         }
         finally
         {
-            Console.WriteLine($"ClientId: {clientId} is closed.");
-            if (clientSocket.Connected)
-            {
-                clientSocket.Shutdown(SocketShutdown.Both);
-            }
-            clientSocket.Dispose();
+            Console.WriteLine($"ClientId: {session.ClientId} is closed.");
+            session.Dispose();
 
-            if (!string.IsNullOrEmpty(clientId))
+            if (!string.IsNullOrEmpty(session.ClientId))
             {
-                _clients.TryRemove(clientId);
+                _clients.TryRemove(session.ClientId);
             }
 
             if (_clients.IsEmpty)
             {
-                await _cts.CancelAsync();
+                Console.WriteLine("Clients are empty.");
             }
         }
     }

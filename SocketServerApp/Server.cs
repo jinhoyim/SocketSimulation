@@ -21,20 +21,13 @@ namespace SocketServerApp
             {
                 try
                 {
-                    var client = await _connectionListener.AcceptAsync(cancellationToken);
-                    _ = Task.Run(async () =>
+                    var clientSession = await _connectionListener.AcceptAsync(cancellationToken);
+                    if (clientSession == null)
                     {
-                        try
-                        {
-                            using var scope = _serviceProvider.CreateScope();
-                            var clientHandler = scope.ServiceProvider.GetRequiredService<ClientHandler>();
-                            await clientHandler.HandleAsync(client, cancellationToken);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Client handler scope DI failed: {ex.Message}");
-                        }
-                    }, cancellationToken);
+                        continue;
+                    }
+                    
+                    _ = Task.Run(async () => await HandleAsync(clientSession, cancellationToken), cancellationToken);
                 }
                 catch (InvalidOperationException invalidOperationException)
                 {
@@ -42,6 +35,20 @@ namespace SocketServerApp
                 }
             }
             Console.WriteLine("Listener socket closed.");
+        }
+
+        private async Task HandleAsync(ClientSession clientSession, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var clientHandler = scope.ServiceProvider.GetRequiredService<ClientHandler>();
+                await clientHandler.HandleAsync(clientSession, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Client handler scope DI failed: {ex.Message}");
+            }
         }
     }
 }

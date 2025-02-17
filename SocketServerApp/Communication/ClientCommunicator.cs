@@ -5,9 +5,9 @@ using SocketCommunicationLib.Model;
 
 namespace SocketServerApp.Communication;
 
-public class ClientCommunicator(string clientId, Socket socket) : SocketCommunicator(socket)
+public class ClientCommunicator(ClientSession session) : SocketCommunicator(session.Socket)
 {
-    public string ClientId => clientId;
+    public string ClientId => session.ClientId;
     
     public async Task SendEmptyDataAsync(ErrorData<string> data, CancellationToken cancellationToken)
     {

@@ -8,28 +8,24 @@ public class ClientIdentifier
 {
     private readonly Socket _client;
     private readonly ICollection<string> _clients;
-    
     private VerifyStatus _verifyStatus = VerifyStatus.PreVerification;
-    public bool IsVerified => _verifyStatus == VerifyStatus.Verified; 
-    public string ClientId { get; private set; } = string.Empty;
-
+    
     public ClientIdentifier(Socket client, ICollection<string> clients)
     {
         _client = client;
         _clients = clients;
     }
     
-    public async Task IdentifyClientAsync(CancellationToken cancellationToken)
+    public async Task<(bool verified, string clientId)> IdentifyClientAsync(CancellationToken cancellationToken)
     {
         await SendReadyConnectAsync(cancellationToken);
         var receiveRequest = await ReceiveRequestAsync(cancellationToken);
-        var tmpClientId = ExtractClientId(receiveRequest);
-        _verifyStatus = Verify(tmpClientId);
-        if (_verifyStatus == VerifyStatus.Verified)
-        {
-            ClientId = tmpClientId;
-        }
-        await SendIdentifyResultAsync(cancellationToken);
+        var clientId = ExtractClientId(receiveRequest);
+        _verifyStatus = Verify(clientId);
+        await SendIdentifyResultAsync(clientId, cancellationToken);
+        return _verifyStatus == VerifyStatus.Verified ?
+            (true, clientId) :
+            (false, string.Empty);
     }
 
     private async Task SendReadyConnectAsync(CancellationToken cancellationToken)
@@ -65,7 +61,7 @@ public class ClientIdentifier
         };
     }
     
-    private async Task SendIdentifyResultAsync(CancellationToken cancellationToken)
+    private async Task SendIdentifyResultAsync(string clientId, CancellationToken cancellationToken)
     {
         var responseMessage = _verifyStatus switch
         {

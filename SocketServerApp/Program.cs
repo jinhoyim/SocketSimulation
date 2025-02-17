@@ -28,8 +28,8 @@ builder.Services.AddSingleton<IDataStore>(provider =>
         provider.GetRequiredService<OutputWriter>()));
 builder.Services.AddSingleton<StartStateStore>();
 builder.Services.AddSingleton<ServerListener>();
+builder.Services.AddSingleton<ClientIdentifierFactory>();
 builder.Services.AddScoped<ClientHandler>();
-builder.Services.AddTransient<ClientIdentifierFactory>();
 builder.Services.AddTransient<ClientCommunicatorFactory>();
 builder.Services.AddTransient<ServerWorkerFactory>();
 

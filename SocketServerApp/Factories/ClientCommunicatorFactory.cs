@@ -5,8 +5,8 @@ namespace SocketServerApp.Factories;
 
 public class ClientCommunicatorFactory
 {
-    public ClientCommunicator Create(string clientId, Socket socket)
+    public ClientCommunicator Create(ClientSession session)
     {
-        return new ClientCommunicator(clientId, socket);
+        return new ClientCommunicator(session);
     }
 }
