@@ -10,7 +10,7 @@ public class ServerConfig
 
     public IPEndPoint IpEndPoint => new(IPAddress.Parse(IpAddress), Port);
     public int StartConnectionCount { get; set; } = 5;
-    public int EndCount { get; set; } = 5000;
+    public int EndCount { get; set; } = 2000;
     public TimeSpan InitLockTime { get; set; } = TimeSpan.FromSeconds(2);
     public int SocketConnectionQueue { get; set; } = 1000;
     public TimeSpan ServerTerminatedDelay { get; set; } = TimeSpan.FromSeconds(5);
