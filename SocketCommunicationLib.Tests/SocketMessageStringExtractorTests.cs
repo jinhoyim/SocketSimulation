@@ -1,6 +1,5 @@
 ﻿using System.Text;
-using FluentAssertions;
-using FluentAssertions.Execution;
+using Shouldly;
 using static SocketCommunicationLib.Contract.ProtocolConstants;
 
 namespace SocketCommunicationLib.Tests;
@@ -19,11 +18,8 @@ public class SocketMessageStringExtractorTests
         
         var actual = sut.AppendAndExtract(message);
 
-        using (new AssertionScope())
-        {
-            actual.Should().HaveCount(1);
-            actual.Should().Contain(pureMessage);
-        }
+        actual.Count.ShouldBe(1);
+        actual.ShouldContain(pureMessage);
     }
 
     [Theory]
@@ -38,10 +34,7 @@ public class SocketMessageStringExtractorTests
         
         var actual = sut.AppendAndExtract(message);
 
-        using (new AssertionScope())
-        {
-            actual.Should().BeEmpty();
-        }
+        actual.ShouldBeEmpty();
     }
     
     [Fact]
@@ -54,11 +47,8 @@ public class SocketMessageStringExtractorTests
         
         var actual = sut.AppendAndExtract(message);
 
-        using (new AssertionScope())
-        {
-            actual.Should().HaveCount(2);
-            actual.Should().ContainInOrder(firstMessage, secondMessage);
-        }
+        actual.Count.ShouldBe(2);
+        actual.ShouldBe(new[] { firstMessage, secondMessage });
     }
 
     [Fact]
@@ -72,13 +62,10 @@ public class SocketMessageStringExtractorTests
         var secondList = sut.AppendAndExtract(second);
         var actual = sut.AppendAndExtract(Eom);
 
-        using (new AssertionScope())
-        {
-            firstList.Should().BeEmpty();
-            secondList.Should().BeEmpty();
-            actual.Should().HaveCount(1);
-            actual.Should().Contain($"{first}{second}");
-        }
+        firstList.ShouldBeEmpty();
+        secondList.ShouldBeEmpty();
+        actual.Count.ShouldBe(1);
+        actual.ShouldContain($"{first}{second}");
     }
 
     [Fact]
@@ -94,11 +81,8 @@ public class SocketMessageStringExtractorTests
         var sut = new SocketMessageStringExtractor(Eom, _encoding);
         var actual = sut.AppendAndExtract(buffer, 0, copyLength);
 
-        using (new AssertionScope())
-        {
-            actual.Should().HaveCount(1);
-            actual.Should().Contain(pureMessage);
-        }
+        actual.Count.ShouldBe(1);
+        actual.ShouldContain(pureMessage);
     }
     
     [Fact]
@@ -116,10 +100,7 @@ public class SocketMessageStringExtractorTests
         var sut = new SocketMessageStringExtractor(Eom, _encoding);
         var actual = sut.AppendAndExtract(buffer, 0, copyLength);
 
-        using (new AssertionScope())
-        {
-            actual.Should().HaveCount(2);
-            actual.Should().ContainInOrder(firstMessage, secondMessage);
-        }
+        actual.Count.ShouldBe(2);
+        actual.ShouldBe(new[] { firstMessage, secondMessage });
     }
 }

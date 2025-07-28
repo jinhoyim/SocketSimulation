@@ -1,6 +1,4 @@
-using System.Reflection.PortableExecutable;
-using FluentAssertions;
-using FluentAssertions.Execution;
+using Shouldly;
 using SocketCommunicationLib.Model;
 
 namespace SocketCommunicationLib.Tests;
@@ -17,11 +15,8 @@ public class LockTimeTests
 
         var actual = sut.TimeLeftToExpire(target);
 
-        using (new AssertionScope())
-        {
-            actual.Should().Be(TimeSpan.FromMilliseconds(1500));
-            sut.IsExpired(target).Should().BeFalse();
-        }
+        actual.ShouldBe(TimeSpan.FromMilliseconds(1500));
+        sut.IsExpired(target).ShouldBeFalse();
     }
 
     [Fact]
@@ -34,11 +29,8 @@ public class LockTimeTests
 
         var actual = sut.TimeLeftToExpire(target);
 
-        using (new AssertionScope())
-        {
-            actual.Should().Be(TimeSpan.FromMilliseconds(1800));
-            sut.IsExpired(target).Should().BeFalse();
-        }
+        actual.ShouldBe(TimeSpan.FromMilliseconds(1800));
+        sut.IsExpired(target).ShouldBeFalse();
     }
 
     [Fact]
@@ -51,11 +43,8 @@ public class LockTimeTests
 
         var actual = sut.TimeLeftToExpire(target);
 
-        using (new AssertionScope())
-        {
-            actual.Should().Be(TimeSpan.FromMilliseconds(-1800));
-            sut.IsExpired(target).Should().BeTrue();
-        }
+        actual.ShouldBe(TimeSpan.FromMilliseconds(-1800));
+        sut.IsExpired(target).ShouldBeTrue();
     }
 
     [Fact]
@@ -68,10 +57,7 @@ public class LockTimeTests
 
         var actual = sut.TimeLeftToExpire(target);
 
-        using (new AssertionScope())
-        {
-            actual.Should().Be(TimeSpan.FromMilliseconds(-1600));
-            sut.IsExpired(target).Should().BeTrue();
-        }
+        actual.ShouldBe(TimeSpan.FromMilliseconds(-1600));
+        sut.IsExpired(target).ShouldBeTrue();
     }
 }

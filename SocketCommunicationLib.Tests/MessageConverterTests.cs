@@ -1,5 +1,4 @@
-using FluentAssertions;
-using FluentAssertions.Execution;
+using Shouldly;
 using SocketCommunicationLib.Contract;
 
 namespace SocketCommunicationLib.Tests;
@@ -17,10 +16,7 @@ public class MessageConverterTests
         var sut = new MessageConverter();
         var message = sut.Convert(input);
 
-        using (new AssertionScope())
-        {
-            message.Type.Should().Be(type);
-            message.Content.Should().Be(content);
-        }
+        message.Type.ShouldBe(type);
+        message.Content.ShouldBe(content);
     }
 }
