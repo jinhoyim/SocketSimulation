@@ -10,7 +10,7 @@ public static class ProtocolConstants
 
     // 접속에 사용
     public const string ReadyConnect = "<|CONNECT|READY|>";
-    public const string Connect = "<|CONNECT|REQUEST>";
+    public const string Connect = "<|CONNECT|REQUEST|>";
     public const string Success = "<|CONNECT|SUCCESS|>"; // ClientId 식별 성공
     public const string Error = "<|CONNECT|ERROR|>"; // ClientId 식별 실패
 }
