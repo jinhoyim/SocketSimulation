@@ -31,30 +31,24 @@ public class SocketMessageStringExtractor
         var data = _stringBuilder.ToString();
         int startIndex = 0;
         int index;
-        int remainStartIndex = 0;
         List<string> list = new();
         while ((index = data.IndexOf(_delimiter, startIndex, StringComparison.Ordinal)) != -1)
         {
-            var msg = data.Substring(startIndex, index - startIndex);
-            msg = msg.Trim();
+            var msg = data.Substring(startIndex, index - startIndex).Trim();
             if (!string.IsNullOrEmpty(msg))
             {
                 list.Add(msg);
             }
-            
+
             startIndex = index + _delimiter.Length;
-            remainStartIndex = startIndex + _delimiter.Length;
-            if (data.Length < remainStartIndex)
-            {
-                break;
-            }
         }
+
         _stringBuilder.Clear();
-        if (data.Length > remainStartIndex)
+        if (startIndex < data.Length)
         {
-            _stringBuilder.Append(
-                data.Substring(remainStartIndex, data.Length - remainStartIndex));
+            _stringBuilder.Append(data.Substring(startIndex));
         }
+
         return list;
     }
 }
