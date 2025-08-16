@@ -103,4 +103,20 @@ public class SocketMessageStringExtractorTests
         actual.Count.ShouldBe(2);
         actual.ShouldBe(new[] { firstMessage, secondMessage });
     }
+
+    [Fact]
+    public void Sut_keep_partial_message_between_calls()
+    {
+        var firstMessage = "First";
+        var secondMessage = "Second";
+        var sut = new SocketMessageStringExtractor(Eom, _encoding);
+
+        var interimList = sut.AppendAndExtract($"{firstMessage}{Eom}{secondMessage}");
+        var finalList = sut.AppendAndExtract(Eom);
+
+        interimList.Count.ShouldBe(1);
+        interimList.ShouldContain(firstMessage);
+        finalList.Count.ShouldBe(1);
+        finalList.ShouldContain(secondMessage);
+    }
 }
